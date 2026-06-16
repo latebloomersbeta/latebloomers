@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LateBloomers — London's flower rescue app</title>
+  <meta name="description" content="LateBloomers connects London's florists with flower lovers, saving end-of-day blooms from being thrown away, one bunch at a time." />
+  <link rel="icon" href="https://storage.googleapis.com/audos-images/chat-attachments/brand-logo-1f652717-e0b3-4b96-9f10-3270ae4f1e08-1781370899480.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #fff7c8;
+      --cream-2: #fffdf1;
+      --yellow: #f6e85f;
+      --yellow-strong: #ffd319;
+      --green: #183d22;
+      --green-2: #2d5b36;
+      --pink: #ffb7cf;
+      --line: #183d22;
+      --shadow: 7px 7px 0 #183d22;
+      --radius-lg: 28px;
+      --radius-md: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(255, 183, 207, 0.45), transparent 24%),
+        radial-gradient(circle at 85% 5%, rgba(246, 232, 95, 0.65), transparent 26%),
+        var(--cream);
+      color: var(--green);
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; }
+
+    .site-wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 247, 200, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 3px solid var(--line);
+    }
+
+    .nav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transform: rotate(-1deg);
+    }
+
+    .nav-logo img { width: 44px; height: 44px; object-fit: contain; }
+
+    .nav-brand {
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--green);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      border: 2px solid transparent;
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+
+    .nav-links a:hover { border-color: var(--line); background: var(--cream-2); }
+
+    button, .button-link {
+      font-family: inherit;
+      border: 3px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover, .button-link:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--line); }
+
+    .nav-cta {
+      background: var(--green);
+      color: var(--cream);
+      padding: 10px 16px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .hero {
+      padding: 58px 0 42px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-card {
+      background: var(--yellow);
+      border: 4px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: clamp(28px, 5vw, 52px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      right: -62px;
+      bottom: -62px;
+      border: 4px solid var(--line);
+      border-radius: 44% 56% 51% 49%;
+      background: var(--pink);
+      transform: rotate(14deg);
+      opacity: 0.85;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      background: var(--cream-2);
+      border: 3px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 13px;
+      margin-bottom: 22px;
+      transform: rotate(-2deg);
+    }
+
+    h1 {
+      font-size: clamp(48px, 9vw, 102px);
+      line-height: 0.86;
+      letter-spacing: -5px;
+      text-transform: uppercase;
+      max-width: 740px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-sub {
+      font-size: clamp(18px, 2vw, 24px);
+      font-weight: 700;
+      max-width: 650px;
+      margin-top: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; position: relative; z-index: 2; }
+
+    .btn-green, .btn-yellow, .btn-outline {
+      padding: 15px 22px;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-green { background: var(--green); color: var(--cream); }
+    .btn-yellow { background: var(--yellow-strong); color: var(--green); }
+    .btn-outline { background: var(--cream-2); color: var(--green); }
+
+    .side-card {
+      border: 4px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--cream-2);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 380px;
+      transform: rotate(1deg);
+    }
+
+    .price-sticker {
+      align-self: flex-start;
+      background: var(--pink);
+      border: 3px solid var(--line);
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 22px;
+      line-height: 0.95;
+      transform: rotate(-5deg);
+      box-shadow: 4px 4px 0 var(--line);
+    }
+
+    .mini-copy {
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+    }
+
+    .barcode {
+      height: 88px;
+      border: 3px solid var(--line);
+      border-radius: 16px;
+      background: repeating-linear-gradient(90deg, var(--green) 0 5px, transparent 5px 11px, var(--green) 11px 14px, transparent 14px 25px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .barcode::after {
+      content: "WAS: BINNED   NOW: RESCUED";
+      position: absolute;
+      left: 12px;
+      bottom: 8px;
+      background: var(--cream-2);
+      border: 2px solid var(--line);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .section {
+      padding: 46px 0;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--cream-2);
+      border: 3px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+      margin-bottom: 12px;
+      transform: rotate(-1deg);
+    }
+
+    h2 {
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 0.92;
+      letter-spacing: -3px;
+      text-transform: uppercase;
+    }
+
+    .section-sub {
+      font-size: 18px;
+      font-weight: 700;
+      max-width: 510px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .step-card, .audience-card, .note-card {
+      background: var(--cream-2);
+      border: 3px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: 5px 5px 0 var(--line);
+      padding: 22px;
+    }
+
+    .step-card:nth-child(2), .step-card:nth-child(4) { transform: rotate(1deg); }
+    .step-card:nth-child(1), .step-card:nth-child(3) { transform: rotate(-1deg); }
+
+    .step-num {
+      width: 42px;
+      height: 42px;
+      background: var(--yellow-strong);
+      color: var(--green);
+      border: 3px solid var(--line);
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .step-title {
+      font-size: 19px;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.05;
+      margin-bottom: 8px;
+    }
+
+    .step-body { font-size: 15px; font-weight: 700; color: var(--green-2); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .audience-card.florist { background: var(--green); color: var(--cream); }
+    .audience-card.customer { background: var(--yellow); color: var(--green); }
+
+    .audience-title {
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .audience-body { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+
+    .benefit-list { list-style: none; display: grid; gap: 10px; }
+
+    .benefit-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-y { background: var(--yellow-strong); border-color: var(--cream); }
+    .dot-g { background: var(--green); }
+
+    .signup-bg {
+      background: var(--green);
+      border-top: 4px solid var(--line);
+      border-bottom: 4px solid var(--line);
+      padding: 54px 22px;
+      margin-top: 18px;
+    }
+
+    .signup-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      background: var(--cream-2);
+      color: var(--green);
+      border: 4px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: clamp(24px, 5vw, 42px);
+      transform: rotate(-0.5deg);
+    }
+
+    .signup-title {
+      font-size: clamp(38px, 6vw, 68px);
+      font-weight: 900;
+      line-height: 0.88;
+      letter-spacing: -3px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .signup-sub {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green-2);
+      margin-bottom: 24px;
+    }
+
+    .signup-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+
+    .tab-btn {
+      background: var(--cream);
+      color: var(--green);
+      padding: 12px 18px;
+      font-size: 14px;
+    }
+
+    .tab-btn.active { background: var(--yellow-strong); box-shadow: 4px 4px 0 var(--line); }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
+    .signup-form { display: grid; gap: 12px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    input {
+      width: 100%;
+      padding: 16px 14px;
+      border-radius: 16px;
+      border: 3px solid var(--line);
+      background: white;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green);
+      font-family: inherit;
+    }
+
+    input::placeholder { color: rgba(24,61,34,0.55); }
+    input:focus { outline: 3px solid var(--yellow-strong); }
+
+    .submit-btn {
+      background: var(--green);
+      color: var(--cream);
+      padding: 17px 22px;
+      font-size: 17px;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .submit-btn:hover { background: var(--green-2); }
+    .submit-btn:disabled { opacity: 0.65; cursor: default; transform: none; box-shadow: none; }
+
+    .success-msg, .error-msg { display: none; }
+
+    .success-msg.visible {
+      display: block;
+      border: 3px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--yellow);
+      padding: 20px;
+      box-shadow: 4px 4px 0 var(--line);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .error-msg.visible {
+      display: block;
+      background: var(--pink);
+      border: 3px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-weight: 900;
+    }
+
+    .small-note {
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--green-2);
+    }
+
+    footer {
+      background: var(--green);
+      color: var(--cream);
+      padding: 36px 22px;
+      text-align: center;
+    }
+
+    .footer-logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .footer-logo-wrap img { width: 42px; height: 42px; object-fit: contain; }
+    .footer-brand { font-size: 24px; font-weight: 900; letter-spacing: -1px; }
+    .footer-tagline { font-size: 15px; font-weight: 800; color: var(--yellow); margin-bottom: 18px; }
+    .footer-links { display: flex; justify-content: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+
+    .footer-links a {
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .footer-links a:hover { color: var(--yellow); }
+    .footer-copy { font-size: 12px; color: rgba(255,247,200,0.65); font-weight: 700; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding-top: 36px; }
+      .steps-grid { grid-template-columns: repeat(2, 1fr); }
+      .section-head { display: block; }
+    }
+
+    @media (max-width: 640px) {
+      .nav-inner { align-items: flex-start; }
+      .nav-logo img { width: 36px; height: 36px; }
+      .nav-brand { font-size: 20px; }
+      .nav-links { display: none; }
+      .hero-card, .side-card, .signup-inner { box-shadow: 5px 5px 0 var(--line); }
+      h1 { letter-spacing: -3px; }
+      .steps-grid, .two-col, .form-row { grid-template-columns: 1fr; }
+      .hero-btns { flex-direction: column; }
+      .btn-green, .btn-yellow, .btn-outline { width: 100%; }
+      .side-card { min-height: 320px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="#top" aria-label="LateBloomers home">
+        <img src="https://storage.googleapis.com/audos-images/chat-attachments/brand-logo-1f652717-e0b3-4b96-9f10-3270ae4f1e08-1781370899480.png" alt="LateBloomers logo">
+        <span class="nav-brand">LateBloomers</span>
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#for-florists">For florists</a>
+        <a href="florist-login.html">Florist login</a>
+        <button class="nav-cta" onclick="scrollToSignup('customer')">Join waitlist</button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <div class="site-wrap">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-card">
+          <div class="hero-badge">London's flower rescue app</div>
+          <h1 id="hero-title">Beautiful flowers. Soft prices. Less waste.</h1>
+          <p class="hero-sub">LateBloomers connects London florists with flower lovers, saving end-of-day blooms from the bin, one bunch at a time.</p>
+          <div class="hero-btns">
+            <button class="btn-green" onclick="scrollToSignup('customer')">Get flowers near me</button>
+            <button class="btn-outline" onclick="scrollToSignup('florist')">List my shop</button>
+          </div>
+        </div>
+
+        <aside class="side-card" aria-label="Late Bloomers launch note">
+          <div class="price-sticker">Not dead yet.<br>Just discounted.</div>
+          <div class="mini-copy">Coming soon to London. First drops will be tiny, local and probably a bit chaotic.</div>
+          <div class="barcode"></div>
+        </aside>
+      </section>
+
+      <section class="section" id="how-it-works">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">How it works</div>
+            <h2>Fresh flowers, rescued daily</h2>
+          </div>
+          <p class="section-sub">Florists package up unsold stems. You reserve a surprise bunch. You collect before closing. Everyone feels smug.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-title">Browse nearby shops</div>
+            <div class="step-body">See which local florists have rescue bunches available today.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-title">Reserve your bunch</div>
+            <div class="step-body">Pay online for a discounted surprise bouquet held just for you.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-title">Collect before closing</div>
+            <div class="step-body">Pop by during the florist's collection window and pick it up.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-title">Take the win</div>
+            <div class="step-body">Fresh flowers at home, less waste in London, no sad bin ending.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="for-florists">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Who it's for</div>
+            <h2>Good for florists. Great for flower lovers.</h2>
+          </div>
+          <p class="section-sub">A tiny marketplace for blooms that deserve a second chance.</p>
+        </div>
+
+        <div class="two-col">
+          <div class="audience-card florist">
+            <div class="audience-title">For florists</div>
+            <div class="audience-body">Stop throwing away perfectly beautiful flowers. Turn leftover stock into revenue and bring new locals through the door.</div>
+            <ul class="benefit-list">
+              <li><span class="dot dot-y"></span> Earn extra from unsold stems</li>
+              <li><span class="dot dot-y"></span> Attract new neighbourhood customers</li>
+              <li><span class="dot dot-y"></span> Reduce daily waste</li>
+              <li><span class="dot dot-y"></span> Simple dashboard coming soon</li>
+              <li><span class="dot dot-y"></span> Free to list your shop</li>
+            </ul>
+            <div style="margin-top: 22px;">
+              <a class="button-link btn-yellow" href="florist-login.html">Florist login</a>
+            </div>
+          </div>
+
+          <div class="audience-card customer">
+            <div class="audience-title">For flower lovers</div>
+            <div class="audience-body">Get beautiful, fresh flowers at friendlier prices while doing something useful for your home, your local florist and the planet.</div>
+            <ul class="benefit-list">
+              <li><span class="dot dot-g"></span> Save on fresh flowers</li>
+              <li><span class="dot dot-g"></span> Discover independent florists</li>
+              <li><span class="dot dot-g"></span> Surprise bunches daily</li>
+              <li><span class="dot dot-g"></span> Help reduce flower waste</li>
+              <li><span class="dot dot-g"></span> Free to join the waitlist</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="signup-bg" id="signup">
+      <div class="signup-inner">
+        <div class="eyebrow">Join the list</div>
+        <div class="signup-title">First dibs on rescued blooms</div>
+        <p class="signup-sub">We're launching in London soon. Join as a flower lover, or register interest as a florist partner.</p>
+
+        <div class="signup-tabs" role="tablist" aria-label="Waitlist type">
+          <button class="tab-btn active" id="tab-customer" onclick="switchTab('customer')" type="button">I want flowers</button>
+          <button class="tab-btn" id="tab-florist" onclick="switchTab('florist')" type="button">I'm a florist</button>
+        </div>
+
+        <div class="form-panel active" id="panel-customer">
+          <div class="success-msg" id="success-customer"><p>You're on the list. We'll let you know when LateBloomers launches near you.</p></div>
+          <div class="error-msg" id="error-customer">Something went wrong. Please try again.</div>
+          <form class="signup-form" id="form-customer" onsubmit="handleSubmit(event, 'customer')">
+            <div class="form-row">
+              <input type="text" id="c-name" placeholder="Your name" autocomplete="name" required>
+              <input type="email" id="c-email" placeholder="Email address" autocomplete="email" required>
+            </div>
+            <div class="form-row">
+              <input type="text" id="c-postcode" placeholder="Your postcode, e.g. N1" autocomplete="postal-code" required>
+              <input type="text" id="c-note" placeholder="Favourite flower, optional">
+            </div>
+            <button type="submit" class="submit-btn" id="btn-customer">Join the waitlist</button>
+          </form>
+        </div>
+
+        <div class="form-panel" id="panel-florist">
+          <div class="success-msg" id="success-florist"><p>Lovely. We'll be in touch soon about getting your shop listed on LateBloomers.</p></div>
+          <div class="error-msg" id="error-florist">Something went wrong. Please try again.</div>
+          <form class="signup-form" id="form-florist" onsubmit="handleSubmit(event, 'florist')">
+            <div class="form-row">
+              <input type="text" id="f-name" placeholder="Your name" autocomplete="name" required>
+              <input type="email" id="f-email" placeholder="Business email" autocomplete="email" required>
+            </div>
+            <div class="form-row">
+              <input type="text" id="f-shop" placeholder="Shop name" required>
+              <input type="text" id="f-postcode" placeholder="Postcode" autocomplete="postal-code" required>
+            </div>
+            <button type="submit" class="submit-btn" id="btn-florist">Register my shop</button>
+          </form>
+          <p class="small-note">Already registered? Use the florist login above to access the draft dashboard.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-logo-wrap">
+      <img src="https://storage.googleapis.com/audos-images/chat-attachments/brand-logo-1f652717-e0b3-4b96-9f10-3270ae4f1e08-1781370899480.png" alt="LateBloomers">
+      <span class="footer-brand">LateBloomers</span>
+    </div>
+    <div class="footer-tagline">London's flower rescue app</div>
+    <div class="footer-links">
+      <a href="#for-florists">For florists</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#signup">Join waitlist</a>
+      <a href="florist-login.html">Florist login</a>
+      <a href="mailto:hello@latebloomers.co.uk">Contact</a>
+    </div>
+    <div class="footer-copy">© 2026 LateBloomers. Sent from North London, bouquet in hand.</div>
+  </footer>
+
+  <script>
+    const SUPABASE_URL = "https://azelftspngjhmqrjtxby.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc";
+
+    function switchTab(tab) {
+      document.getElementById('panel-customer').classList.toggle('active', tab === 'customer');
+      document.getElementById('panel-florist').classList.toggle('active', tab === 'florist');
+      document.getElementById('tab-customer').classList.toggle('active', tab === 'customer');
+      document.getElementById('tab-florist').classList.toggle('active', tab === 'florist');
+    }
+
+    function scrollToSignup(tab) {
+      switchTab(tab);
+      document.getElementById('signup').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function handleSubmit(e, type) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-' + type);
+      const errorEl = document.getElementById('error-' + type);
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      errorEl.classList.remove('visible');
+
+      let data = {};
+      if (type === 'customer') {
+        data = {
+          name: document.getElementById('c-name').value,
+          email: document.getElementById('c-email').value,
+          postcode: document.getElementById('c-postcode').value,
+          note: document.getElementById('c-note').value,
+          type: 'customer'
+        };
+      } else {
+        data = {
+          name: document.getElementById('f-name').value,
+          email: document.getElementById('f-email').value,
+          postcode: document.getElementById('f-postcode').value,
+          shop_name: document.getElementById('f-shop').value,
+          type: 'florist'
+        };
+      }
+
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/customers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        document.getElementById('form-' + type).style.display = 'none';
+        document.getElementById('success-' + type).classList.add('visible');
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = type === 'customer' ? 'Join the waitlist' : 'Register my shop';
+        errorEl.classList.add('visible');
+      }
+    }
+  </script>
+
+</body>
+</html>
