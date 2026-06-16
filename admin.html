@@ -14,23 +14,16 @@
     input:focus, textarea:focus { border-color: #888780; }
     button { font-family: inherit; cursor: pointer; border-radius: 8px; border: 1px solid #d3d1c7; background: transparent; color: #2C2C2A; padding: 6px 14px; font-size: 13px; transition: background 0.15s; }
     button:hover { background: #f1efe8; }
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
 
-// --- USERS ---
-// You are the superadmin. Other admins get added here by you via the "Team" tab.
-const SUPERADMIN = { email: "rebourg.clemence@gmail.com", password: "LateBlo0mers!Admin!", role: "superadmin" };
+const SUPERADMIN = { email: "rebourg.clemence@gmail.com", password: "LateBlo0mers!Admin!", role: "superadmin", status: "active" };
 
-const initialAdmins = [
-  SUPERADMIN,
-  // Other admins will be added here by you once approved
-];
+const initialAdmins = [SUPERADMIN];
 
-// --- FLORIST DATA ---
 const initialFlorists = [
   { id: 1, name: "Petal & Stem", owner: "Sophie Marchetti", email: "sophie@petalandstem.co.uk", location: "Hackney, London", submitted: "2026-06-10", status: "pending", portfolio: "https://petalandstem.co.uk", specialties: ["Seasonal", "Dried flowers", "Weddings"], bio: "10 years experience, Chelsea Flower Show exhibitor, focused on British-grown stems only.", notes: "", images: 6 },
   { id: 2, name: "Wild & Rooted", owner: "Amara Osei", email: "amara@wildandrooted.com", location: "Brixton, London", submitted: "2026-06-08", status: "pending", portfolio: "https://wildandrooted.com", specialties: ["Wild", "Foraged", "Events"], bio: "Self-taught florist bringing Ghanaian botanical traditions into London's floral scene.", notes: "", images: 4 },
@@ -56,20 +49,17 @@ const STATUS_STYLES = {
 };
 
 const ADMIN_STATUS_STYLES = {
-  pending: { bg: "#FAEEDA", color: "#854F0B", label: "Awaiting approval" },
   active: { bg: "#EAF3DE", color: "#3B6D11", label: "Active" },
   revoked: { bg: "#FCEBEB", color: "#A32D2D", label: "Revoked" },
 };
 
-// Generates a random strong password like Xk9!mPq2#Wr
 function generatePassword() {
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   const lower = "abcdefghjkmnpqrstuvwxyz";
   const digits = "23456789";
   const symbols = "!@#$%^&*";
   const all = upper + lower + digits + symbols;
-  let pw = "";
-  pw += upper[Math.floor(Math.random() * upper.length)];
+  let pw = upper[Math.floor(Math.random() * upper.length)];
   pw += lower[Math.floor(Math.random() * lower.length)];
   pw += digits[Math.floor(Math.random() * digits.length)];
   pw += symbols[Math.floor(Math.random() * symbols.length)];
@@ -83,17 +73,15 @@ function StatusBadge({ status, styles }) {
   return <span style={{ background: s.bg, color: s.color, fontSize: 12, fontWeight: 500, padding: "3px 10px", borderRadius: 20, display: "inline-block" }}>{s.label}</span>;
 }
 
-function LoginScreen({ onLogin }) {
+function LoginScreen({ onLogin, admins }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [showPw, setShowPw] = React.useState(false);
-  const [admins, setAdmins] = React.useState(initialAdmins);
 
   const handleSubmit = () => {
     const match = admins.find(a => a.email === email.toLowerCase().trim() && a.password === password);
     if (!match) { setError("Incorrect email or password."); return; }
-    if (match.status === "pending") { setError("Your access is awaiting approval from the superadmin."); return; }
     if (match.status === "revoked") { setError("Your access has been revoked. Contact rebourg.clemence@gmail.com."); return; }
     onLogin(match);
   };
@@ -231,10 +219,6 @@ function TeamTab({ admins, setAdmins }) {
     setAdmins(prev => prev.map(a => a.email === email ? { ...a, status: newStatus } : a));
   };
 
-  const toggleShowPw = (email) => {
-    setShowPws(prev => ({ ...prev, [email]: !prev[email] }));
-  };
-
   const otherAdmins = admins.filter(a => a.email !== SUPERADMIN.email);
 
   return (
@@ -243,15 +227,8 @@ function TeamTab({ admins, setAdmins }) {
         <p style={{ fontWeight: 500, fontSize: 15, marginBottom: 4 }}>Add a new team member</p>
         <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 16 }}>Enter their email and the dashboard will generate a secure password for them. Share it with them directly.</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input
-            type="email" value={newEmail} onChange={e => { setNewEmail(e.target.value); setError(""); setGeneratedPw(""); }}
-            placeholder="colleague@email.com"
-            style={{ flex: 1, minWidth: 200 }}
-            onKeyDown={e => e.key === "Enter" && handleGenerate()}
-          />
-          <button onClick={handleGenerate} style={{ padding: "8px 18px", background: "#2C2C2A", color: "#F1EFE8", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>
-            Generate access
-          </button>
+          <input type="email" value={newEmail} onChange={e => { setNewEmail(e.target.value); setError(""); setGeneratedPw(""); }} placeholder="colleague@email.com" style={{ flex: 1, minWidth: 200 }} onKeyDown={e => e.key === "Enter" && handleGenerate()} />
+          <button onClick={handleGenerate} style={{ padding: "8px 18px", background: "#2C2C2A", color: "#F1EFE8", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>Generate access</button>
         </div>
         {error && <p style={{ fontSize: 13, color: "#a32d2d", marginTop: 10 }}>{error}</p>}
         {generatedPw && (
@@ -261,45 +238,36 @@ function TeamTab({ admins, setAdmins }) {
               <code style={{ fontSize: 14, fontWeight: 500, letterSpacing: 1, color: "#2C2C2A", background: "#fff", padding: "6px 12px", borderRadius: 6, border: "1px solid #d3d1c7", flex: 1 }}>{generatedPw}</code>
               <button onClick={() => copyToClipboard(generatedPw)} style={{ whiteSpace: "nowrap", fontSize: 12, padding: "6px 14px" }}>{copied ? "✓ Copied" : "Copy"}</button>
             </div>
-            <p style={{ fontSize: 12, color: "#5f5e5a", marginTop: 8 }}>They can log in with their email and this password. You can revoke their access below at any time.</p>
+            <p style={{ fontSize: 12, color: "#5f5e5a", marginTop: 8 }}>They log in with their email and this password. You can revoke their access below at any time.</p>
           </div>
         )}
       </div>
-
       <div style={{ background: "#fff", border: "1px solid #d3d1c7", borderRadius: 12, overflow: "hidden" }}>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid #d3d1c7" }}>
           <p style={{ fontWeight: 500, fontSize: 15 }}>Team members</p>
-          <p style={{ fontSize: 13, color: "#5f5e5a", marginTop: 2 }}>You are the superadmin. You can activate or revoke access for anyone below.</p>
+          <p style={{ fontSize: 13, color: "#5f5e5a", marginTop: 2 }}>You can activate or revoke access for anyone below.</p>
         </div>
-
-        {otherAdmins.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#888780", padding: "20px 16px", textAlign: "center" }}>No other team members yet.</p>
-        ) : (
-          otherAdmins.map(a => (
+        {otherAdmins.length === 0
+          ? <p style={{ fontSize: 13, color: "#888780", padding: "20px 16px", textAlign: "center" }}>No other team members yet.</p>
+          : otherAdmins.map(a => (
             <div key={a.email} style={{ padding: "14px 16px", borderTop: "1px solid #d3d1c7", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#E6F1FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: "#185FA5", flexShrink: 0 }}>
-                {a.email.slice(0, 2).toUpperCase()}
-              </div>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#E6F1FB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: "#185FA5", flexShrink: 0 }}>{a.email.slice(0, 2).toUpperCase()}</div>
               <div style={{ flex: 1, minWidth: 140 }}>
                 <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{a.email}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 12, color: "#5f5e5a" }}>{showPws[a.email] ? a.password : "••••••••••••"}</span>
-                  <button onClick={() => toggleShowPw(a.email)} style={{ fontSize: 11, padding: "2px 8px", color: "#5f5e5a" }}>{showPws[a.email] ? "Hide" : "Show"}</button>
-                  <button onClick={() => copyToClipboard(a.password)} style={{ fontSize: 11, padding: "2px 8px", color: "#5f5e5a" }}>Copy pw</button>
+                  <button onClick={() => setShowPws(prev => ({ ...prev, [a.email]: !prev[a.email] }))} style={{ fontSize: 11, padding: "2px 8px" }}>{showPws[a.email] ? "Hide" : "Show"}</button>
+                  <button onClick={() => copyToClipboard(a.password)} style={{ fontSize: 11, padding: "2px 8px" }}>Copy</button>
                 </div>
               </div>
-              <StatusBadge status={a.status || "active"} styles={ADMIN_STATUS_STYLES} />
+              <StatusBadge status={a.status} styles={ADMIN_STATUS_STYLES} />
               <div style={{ display: "flex", gap: 6 }}>
-                {a.status !== "active" && (
-                  <button onClick={() => updateStatus(a.email, "active")} style={{ fontSize: 12, padding: "5px 12px", background: "#EAF3DE", color: "#3B6D11", border: "1px solid #C0DD97", borderRadius: 8 }}>Activate</button>
-                )}
-                {a.status !== "revoked" && (
-                  <button onClick={() => updateStatus(a.email, "revoked")} style={{ fontSize: 12, padding: "5px 12px", background: "#FCEBEB", color: "#A32D2D", border: "1px solid #F7C1C1", borderRadius: 8 }}>Revoke</button>
-                )}
+                {a.status !== "active" && <button onClick={() => updateStatus(a.email, "active")} style={{ fontSize: 12, padding: "5px 12px", background: "#EAF3DE", color: "#3B6D11", border: "1px solid #C0DD97", borderRadius: 8 }}>Activate</button>}
+                {a.status !== "revoked" && <button onClick={() => updateStatus(a.email, "revoked")} style={{ fontSize: 12, padding: "5px 12px", background: "#FCEBEB", color: "#A32D2D", border: "1px solid #F7C1C1", borderRadius: 8 }}>Revoke</button>}
               </div>
             </div>
           ))
-        )}
+        }
       </div>
     </div>
   );
@@ -328,7 +296,6 @@ function App() {
   const latestMonth = signupData[signupData.length - 1];
   const prevMonth = signupData[signupData.length - 2];
   const growth = Math.round(((latestMonth.customers - prevMonth.customers) / prevMonth.customers) * 100);
-
   const isSuperAdmin = user && user.role === "superadmin";
 
   const tabs = [
@@ -340,7 +307,7 @@ function App() {
   if (!user) return <LoginScreen onLogin={setUser} admins={admins} />;
 
   return (
-    <div style={{ minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: "100vh" }}>
       <div style={{ borderBottom: "1px solid #d3d1c7", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 18 }}>🌸</span>
@@ -431,50 +398,7 @@ function App() {
   );
 }
 
-// Pass admins down to LoginScreen so it can check against live list
-function LoginScreen({ onLogin, admins }) {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [showPw, setShowPw] = React.useState(false);
-
-  const handleSubmit = () => {
-    const match = admins.find(a => a.email === email.toLowerCase().trim() && a.password === password);
-    if (!match) { setError("Incorrect email or password."); return; }
-    if (match.status === "pending") { setError("Your access is awaiting approval. Contact rebourg.clemence@gmail.com."); return; }
-    if (match.status === "revoked") { setError("Your access has been revoked. Contact rebourg.clemence@gmail.com."); return; }
-    onLogin(match);
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", background: "#fafaf9" }}>
-      <div style={{ width: "100%", maxWidth: 380, background: "#fff", border: "1px solid #d3d1c7", borderRadius: 12, padding: "2rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>🌸</div>
-          <h1 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>Late Bloomers</h1>
-          <p style={{ fontSize: 13, color: "#5f5e5a" }}>Admin portal — authorised staff only</p>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 4 }}>Email</label>
-          <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} placeholder="your@email.com" onKeyDown={e => e.key === "Enter" && handleSubmit()} />
-        </div>
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 4 }}>Password</label>
-          <div style={{ position: "relative" }}>
-            <input type={showPw ? "text" : "password"} value={password} onChange={e => { setPassword(e.target.value); setError(""); }} placeholder="••••••••" onKeyDown={e => e.key === "Enter" && handleSubmit()} style={{ paddingRight: 40 }} />
-            <button onClick={() => setShowPw(p => !p)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, color: "#5f5e5a", fontSize: 16 }}>{showPw ? "🙈" : "👁"}</button>
-          </div>
-        </div>
-        {error && <p style={{ fontSize: 13, color: "#a32d2d", marginBottom: 14 }}>{error}</p>}
-        <button onClick={handleSubmit} style={{ width: "100%", padding: "9px", background: "#2C2C2A", color: "#F1EFE8", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 500 }}>Sign in</button>
-        <p style={{ fontSize: 12, color: "#888780", textAlign: "center", marginTop: 16 }}>Access restricted to Late Bloomers employees.<br/>Contact rebourg.clemence@gmail.com to request access.</p>
-      </div>
-    </div>
-  );
-}
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
   </script>
 </body>
