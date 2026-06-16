@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Late Bloomers — Florist Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f3ee; color: #2c2c2a; }
+  button { font-family: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const SUPABASE_URL = 'https://azelftspngjhmqrjtxby.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const styles = {
+  dash: { display:'flex', minHeight:'100vh' },
+  sidebar: { width:210, flexShrink:0, background:'#fff', borderRight:'0.5px solid #d3d1c7', display:'flex', flexDirection:'column', padding:'1.25rem 0' },
+  logoArea: { padding:'0 1rem 1.25rem', borderBottom:'0.5px solid #d3d1c7', marginBottom:'0.75rem' },
+  logoName: { fontSize:15, fontWeight:500, color:'#2c2c2a' },
+  logoSub: { fontSize:11, color:'#888780', marginTop:2 },
+  navItem: (active) => ({ display:'flex', alignItems:'center', gap:8, padding:'9px 1rem', fontSize:13, color: active ? '#0F6E56' : '#888780', borderLeft: active ? '2px solid #0F6E56' : '2px solid transparent', background: active ? '#E1F5EE' : 'transparent', fontWeight: active ? 500 : 400, cursor:'pointer' }),
+  sidebarFooter: { marginTop:'auto', padding:'0.75rem 1rem', borderTop:'0.5px solid #d3d1c7', fontSize:12, color:'#888780', cursor:'pointer' },
+  main: { flex:1, padding:'1.5rem', overflowY:'auto' },
+  pageTitle: { fontSize:18, fontWeight:500, color:'#2c2c2a', marginBottom:4 },
+  pageSub: { fontSize:13, color:'#888780', marginBottom:'1.25rem' },
+  statGrid: { display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:'1.5rem' },
+  stat: { background:'#f1efe8', borderRadius:8, padding:'0.875rem 1rem' },
+  statLabel: { fontSize:12, color:'#888780', marginBottom:4 },
+  statVal: { fontSize:22, fontWeight:500, color:'#2c2c2a' },
+  card: { background:'#fff', border:'0.5px solid #d3d1c7', borderRadius:12, padding:'1rem 1.25rem', marginBottom:'1rem' },
+  cardTitle: { fontSize:14, fontWeight:500, color:'#2c2c2a', marginBottom:'1rem' },
+  row: { display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'0.5px solid #f1efe8', fontSize:13 },
+  addBtn: { display:'flex', alignItems:'center', gap:6, background:'#0F6E56', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, marginBottom:'1.25rem' },
+  outlineBtn: { background:'transparent', border:'0.5px solid #b4b2a9', borderRadius:8, padding:'6px 12px', fontSize:12, color:'#5f5e5a' },
+  dangerBtn: { background:'transparent', border:'0.5px solid #f09595', borderRadius:8, padding:'6px 12px', fontSize:12, color:'#a32d2d' },
+  badge: (type) => {
+    const map = { stem:['#E1F5EE','#0F6E56'], bundle:['#EEEDFE','#534AB7'], live:['#EAF3DE','#3B6D11'], sold:['#f1efe8','#5f5e5a'], pending:['#FAEEDA','#854F0B'], ready:['#EAF3DE','#3B6D11'], collected:['#f1efe8','#5f5e5a'], paid:['#EAF3DE','#3B6D11'], upcoming:['#FAEEDA','#854F0B'], approved:['#EAF3DE','#3B6D11'] };
+    const [bg, col] = map[type] || ['#f1efe8','#5f5e5a'];
+    return { display:'inline-block', fontSize:11, padding:'2px 8px', borderRadius:6, fontWeight:500, background:bg, color:col };
+  },
+  input: { width:'100%', padding:'8px 10px', border:'0.5px solid #b4b2a9', borderRadius:8, fontSize:13, color:'#2c2c2a', background:'#fff', marginBottom:10 },
+  label: { fontSize:12, color:'#888780', marginBottom:4, display:'block' },
+  modalOverlay: { position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100 },
+  modal: { background:'#fff', borderRadius:12, padding:'1.5rem', width:400, maxWidth:'90vw' },
+  modalTitle: { fontSize:16, fontWeight:500, marginBottom:'1rem' },
+  profileLabel: { width:130, color:'#888780', flexShrink:0, fontSize:13 },
+  profileVal: { flex:1, color:'#2c2c2a', fontSize:13 },
+  editLink: { fontSize:12, color:'#0F6E56', cursor:'pointer' },
+  photoBox: { border:'1.5px dashed #b4b2a9', borderRadius:12, overflow:'hidden', marginBottom:'1rem', cursor:'pointer' },
+  photoPlaceholder: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, padding:'2rem', background:'#f5f3ee', minHeight:160 },
+  emptyState: { textAlign:'center', padding:'3rem 1rem', color:'#888780', fontSize:13 },
+};
+
+function LoginScreen() {
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setError('Incorrect email or password. Please try again.');
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f5f3ee' }}>
+      <div style={{ background:'#fff', borderRadius:12, border:'0.5px solid #d3d1c7', padding:'2rem', width:360, maxWidth:'90vw' }}>
+        <div style={{ marginBottom:'1.5rem', textAlign:'center' }}>
+          <div style={{ fontSize:28, marginBottom:8 }}>🌸</div>
+          <div style={{ fontSize:18, fontWeight:500 }}>Late Bloomers</div>
+          <div style={{ fontSize:13, color:'#888780', marginTop:4 }}>Florist dashboard</div>
+        </div>
+        <form onSubmit={handleLogin}>
+          <label style={styles.label}>Email</label>
+          <input style={styles.input} type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" />
+          <label style={styles.label}>Password</label>
+          <input style={styles.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" />
+          {error && <p style={{ fontSize:13, color:'#a32d2d', marginBottom:10 }}>{error}</p>}
+          <button type="submit" style={{ ...styles.addBtn, width:'100%', justifyContent:'center' }} disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign in'}
+          </button>
+        </form>
+        <p style={{ fontSize:12, color:'#888780', textAlign:'center', marginTop:'1rem' }}>
+          Need access? Contact <a href="mailto:rebourg.clemence@gmail.com" style={{ color:'#0F6E56' }}>Clem at Late Bloomers</a>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AddListingModal({ onClose, onSave }) {
+  const [name, setName] = React.useState('');
+  const [type, setType] = React.useState('stem');
+  const [quantity, setQuantity] = React.useState('');
+  const [originalPrice, setOriginalPrice] = React.useState('');
+  const [price, setPrice] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('listings').insert({
+      florist_id: user.id, name, type,
+      quantity: parseInt(quantity),
+      original_price: parseFloat(originalPrice),
+      price: parseFloat(price),
+      status: 'live'
+    });
+    if (!error) { onSave(); onClose(); }
+    else alert('Could not save listing. Please try again.');
+    setSaving(false);
+  }
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.modal} onClick={e => e.stopPropagation()}>
+        <div style={styles.modalTitle}>Add a listing</div>
+        <form onSubmit={handleSave}>
+          <label style={styles.label}>Flower / product name</label>
+          <input style={styles.input} value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. White roses" />
+          <label style={styles.label}>Type</label>
+          <select style={styles.input} value={type} onChange={e => setType(e.target.value)}>
+            <option value="stem">Stems (sold individually)</option>
+            <option value="bundle">Bundle / bouquet (sold as one)</option>
+          </select>
+          <label style={styles.label}>{type === 'stem' ? 'Number of stems available' : 'Number of bundles available'}</label>
+          <input style={styles.input} type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} required placeholder="e.g. 10" />
+          <label style={styles.label}>{type === 'stem' ? 'Original price per stem (£)' : 'Original price per bundle (£)'} <span style={{color:'#b4b2a9'}}>what it normally costs</span></label>
+          <input style={styles.input} type="number" step="0.01" min="0" value={originalPrice} onChange={e => setOriginalPrice(e.target.value)} required placeholder="e.g. 4.00" />
+          <label style={styles.label}>{type === 'stem' ? 'Late Bloomers price per stem (£)' : 'Late Bloomers price per bundle (£)'} <span style={{color:'#b4b2a9'}}>your discounted price</span></label>
+          <input style={styles.input} type="number" step="0.01" min="0" value={price} onChange={e => setPrice(e.target.value)} required placeholder="e.g. 1.50" />
+          <div style={{ display:'flex', gap:8, marginTop:4 }}>
+            <button type="button" style={styles.outlineBtn} onClick={onClose}>Cancel</button>
+            <button type="submit" style={{ ...styles.addBtn, margin:0 }} disabled={saving}>{saving ? 'Saving...' : 'Add listing'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ListingsTab() {
+  const [listings, setListings] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [showModal, setShowModal] = React.useState(false);
+
+  async function load() {
+    setLoading(true);
+    const { data } = await supabase.from('listings').select('*').order('created_at', { ascending: false });
+    setListings(data || []);
+    setLoading(false);
+  }
+
+  React.useEffect(() => { load(); }, []);
+
+  async function markSoldOut(id) {
+    await supabase.from('listings').update({ status: 'sold' }).eq('id', id);
+    load();
+  }
+
+  async function deleteListing(id) {
+    if (!confirm('Remove this listing?')) return;
+    await supabase.from('listings').delete().eq('id', id);
+    load();
+  }
+
+  const live = listings.filter(l => l.status === 'live');
+  const sold = listings.filter(l => l.status === 'sold');
+  const today = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+
+  return (
+    <div>
+      <div style={styles.pageTitle}>Today's listings</div>
+      <div style={styles.pageSub}>{today}</div>
+      <div style={styles.statGrid}>
+        <div style={styles.stat}><div style={styles.statLabel}>Live now</div><div style={{ ...styles.statVal, color:'#0F6E56' }}>{live.length}</div></div>
+        <div style={styles.stat}><div style={styles.statLabel}>Sold out</div><div style={styles.statVal}>{sold.length}</div></div>
+        <div style={styles.stat}><div style={styles.statLabel}>Total listings</div><div style={styles.statVal}>{listings.length}</div></div>
+        <div style={styles.stat}><div style={styles.statLabel}>Est. revenue</div><div style={{ ...styles.statVal, fontSize:18 }}>£{listings.reduce((sum, l) => sum + (l.status === 'sold' ? (l.price * l.quantity) : 0), 0).toFixed(2)}</div></div>
+      </div>
+      <button style={styles.addBtn} onClick={() => setShowModal(true)}>+ Add a listing</button>
+      {loading ? <p style={styles.emptyState}>Loading...</p> : (
+        <>
+          <div style={styles.card}>
+            <div style={styles.cardTitle}>Live now</div>
+            {live.length === 0
+              ? <p style={{ fontSize:13, color:'#888780' }}>No live listings yet — add one above.</p>
+              : live.map(l => (
+                <div key={l.id} style={styles.row}>
+                  <span style={styles.badge(l.type)}>{l.type === 'stem' ? 'Stems' : 'Bundle'}</span>
+                  <span style={{ flex:1, fontWeight:500 }}>{l.name}</span>
+                  <span style={{ color:'#888780', width:80, textAlign:'right' }}>{l.quantity} left</span>
+                  <span style={{ textAlign:'right' }}>
+                    {l.original_price && <span style={{ textDecoration:'line-through', color:'#b4b2a9', fontSize:11, marginRight:4 }}>£{parseFloat(l.original_price).toFixed(2)}</span>}
+                    <span style={{ fontWeight:500, color:'#0F6E56' }}>£{parseFloat(l.price).toFixed(2)}{l.type === 'stem' ? ' ea' : ''}</span>
+                  </span>
+                  <span style={styles.badge('live')}>Live</span>
+                  <button style={styles.outlineBtn} onClick={() => markSoldOut(l.id)}>Mark sold</button>
+                  <button style={styles.dangerBtn} onClick={() => deleteListing(l.id)}>Remove</button>
+                </div>
+              ))
+            }
+          </div>
+          {sold.length > 0 && (
+            <div style={styles.card}>
+              <div style={styles.cardTitle}>Sold out today</div>
+              {sold.map(l => (
+                <div key={l.id} style={styles.row}>
+                  <span style={styles.badge(l.type)}>{l.type === 'stem' ? 'Stems' : 'Bundle'}</span>
+                  <span style={{ flex:1, fontWeight:500 }}>{l.name}</span>
+                  <span style={{ color:'#888780', width:80, textAlign:'right' }}>{l.quantity} total</span>
+                  <span style={{ textAlign:'right' }}>
+                    {l.original_price && <span style={{ textDecoration:'line-through', color:'#b4b2a9', fontSize:11, marginRight:4 }}>£{parseFloat(l.original_price).toFixed(2)}</span>}
+                    <span style={{ fontWeight:500 }}>£{parseFloat(l.price).toFixed(2)}{l.type === 'stem' ? ' ea' : ''}</span>
+                  </span>
+                  <span style={styles.badge('sold')}>Sold out</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      {showModal && <AddListingModal onClose={() => setShowModal(false)} onSave={load} />}
+    </div>
+  );
+}
+
+function OrdersTab() {
+  const [orders, setOrders] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  async function load() {
+    setLoading(true);
+    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    setOrders(data || []);
+    setLoading(false);
+  }
+
+  React.useEffect(() => { load(); }, []);
+
+  async function updateStatus(id, status) {
+    await supabase.from('orders').update({ status }).eq('id', id);
+    load();
+  }
+
+  const pending = orders.filter(o => o.status === 'pending');
+  const ready = orders.filter(o => o.status === 'ready');
+  const collected = orders.filter(o => o.status === 'collected');
+
+  return (
+    <div>
+      <div style={styles.pageTitle}>Orders</div>
+      <div style={styles.pageSub}>People coming to collect today</div>
+      <div style={styles.statGrid}>
+        <div style={styles.stat}><div style={styles.statLabel}>Pending</div><div style={styles.statVal}>{pending.length}</div></div>
+        <div style={styles.stat}><div style={styles.statLabel}>Ready</div><div style={{ ...styles.statVal, color:'#0F6E56' }}>{ready.length}</div></div>
+        <div style={styles.stat}><div style={styles.statLabel}>Collected</div><div style={styles.statVal}>{collected.length}</div></div>
+        <div style={styles.stat}><div style={styles.statLabel}>Total today</div><div style={styles.statVal}>{orders.length}</div></div>
+      </div>
+      {loading ? <p style={styles.emptyState}>Loading...</p> : orders.length === 0 ? (
+        <div style={styles.emptyState}>
+          <p>No orders yet today.</p>
+          <p style={{ marginTop:8 }}>Orders will appear here when customers buy your listings.</p>
+        </div>
+      ) : (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>All orders</div>
+          {orders.map(o => (
+            <div key={o.id} style={{ ...styles.row, flexWrap:'wrap', gap:8 }}>
+              <span style={{ flex:1, fontWeight:500, minWidth:100 }}>{o.customer_name}</span>
+              <span style={{ color:'#888780', flex:1, minWidth:120 }}>{o.item}</span>
+              <span style={{ color:'#888780', fontSize:12 }}>{new Date(o.created_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}</span>
+              <span style={styles.badge(o.status)}>{o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span>
+              {o.status === 'pending' && <button style={styles.outlineBtn} onClick={() => updateStatus(o.id, 'ready')}>Mark ready</button>}
+              {o.status === 'ready' && <button style={styles.outlineBtn} onClick={() => updateStatus(o.id, 'collected')}>Mark collected</button>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShopTab({ profile, onProfileUpdate, session }) {
+  const [editing, setEditing] = React.useState(false);
+  const [form, setForm] = React.useState(profile || {});
+  const [saving, setSaving] = React.useState(false);
+  const [photoPreview, setPhotoPreview] = React.useState(profile?.photo_url || null);
+  const [uploading, setUploading] = React.useState(false);
+  const [changingPassword, setChangingPassword] = React.useState(false);
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState('');
+  const [passwordSuccess, setPasswordSuccess] = React.useState(false);
+  const [savingPassword, setSavingPassword] = React.useState(false);
+  const fileInputRef = React.useRef();
+
+  React.useEffect(() => { setForm(profile || {}); setPhotoPreview(profile?.photo_url || null); }, [profile]);
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const ext = file.name.split('.').pop();
+    const path = `shop-photos/${user.id}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from('florist-assets').upload(path, file, { upsert: true });
+    if (uploadError) {
+      alert('Photo upload failed. Make sure the "florist-assets" storage bucket exists in Supabase.');
+      setUploading(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from('florist-assets').getPublicUrl(path);
+    setPhotoPreview(publicUrl);
+    setForm(f => ({ ...f, photo_url: publicUrl }));
+    await supabase.from('customers').update({ photo_url: publicUrl }).eq('email', user.email).eq('type', 'florist');
+    setUploading(false);
+  }
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('customers').update({
+      shop_name: form.shop_name,
+      notes: form.bio,
+      photo_url: form.photo_url,
+      collection_window: form.collection_window,
+    }).eq('email', user.email).eq('type', 'florist');
+    if (!error) { onProfileUpdate(form); setEditing(false); }
+    else alert('Could not save. Please try again.');
+    setSaving(false);
+  }
+
+  async function handlePasswordChange(e) {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+    if (newPassword !== confirmPassword) { setPasswordError('Passwords do not match.'); return; }
+    setSavingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) { setPasswordError('Could not update password. Please try again.'); }
+    else { setPasswordSuccess(true); setNewPassword(''); setConfirmPassword(''); setTimeout(() => { setChangingPassword(false); setPasswordSuccess(false); }, 2000); }
+    setSavingPassword(false);
+  }
+
+  return (
+    <div>
+      <div style={styles.pageTitle}>My shop</div>
+      <div style={styles.pageSub}>How you appear on Late Bloomers</div>
+      <div style={styles.card}>
+        <div style={styles.cardTitle}>Shop photo</div>
+        <input type="file" ref={fileInputRef} accept="image/*" style={{ display:'none' }} onChange={handlePhotoUpload} />
+        <div style={styles.photoBox} onClick={() => fileInputRef.current.click()}>
+          {photoPreview ? (
+            <div style={{ position:'relative' }}>
+              <img src={photoPreview} alt="Shop" style={{ width:'100%', height:180, objectFit:'cover', display:'block' }} />
+              <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.4)', padding:'8px 12px' }}>
+                <span style={{ fontSize:12, color:'#fff' }}>Click to change photo</span>
+              </div>
+            </div>
+          ) : (
+            <div style={styles.photoPlaceholder}>
+              <span style={{ fontSize:28 }}>📷</span>
+              <p style={{ fontSize:13, color:'#888780', textAlign:'center' }}>{uploading ? 'Uploading...' : 'Click to upload a photo of your shop'}</p>
+              <span style={{ fontSize:12, color:'#b4b2a9' }}>JPG or PNG, up to 5MB</span>
+            </div>
+          )}
+        </div>
+        <p style={{ fontSize:12, color:'#888780' }}>This is the first thing customers see. A bright, welcoming photo works best.</p>
+      </div>
+      <div style={styles.card}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem' }}>
+          <div style={styles.cardTitle}>Shop details</div>
+          {!editing && <span style={styles.editLink} onClick={() => setEditing(true)}>✏️ Edit</span>}
+        </div>
+        {editing ? (
+          <form onSubmit={handleSave}>
+            <label style={styles.label}>Shop name</label>
+            <input style={styles.input} value={form.shop_name || ''} onChange={e => setForm(f => ({ ...f, shop_name: e.target.value }))} />
+            <label style={styles.label}>Collection window (e.g. 5:00pm – 7:00pm)</label>
+            <input style={styles.input} value={form.collection_window || ''} onChange={e => setForm(f => ({ ...f, collection_window: e.target.value }))} placeholder="e.g. 5:00pm – 7:00pm" />
+            <label style={styles.label}>Short bio</label>
+            <textarea style={{ ...styles.input, height:80, resize:'vertical' }} value={form.bio || ''} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="Tell customers a bit about your shop..." />
+            <div style={{ display:'flex', gap:8 }}>
+              <button type="button" style={styles.outlineBtn} onClick={() => setEditing(false)}>Cancel</button>
+              <button type="submit" style={{ ...styles.addBtn, margin:0 }} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div style={styles.row}><span style={styles.profileLabel}>Shop name</span><span style={styles.profileVal}>{form.shop_name || '—'}</span></div>
+            <div style={styles.row}><span style={styles.profileLabel}>Collection window</span><span style={styles.profileVal}>{form.collection_window || '—'}</span></div>
+            <div style={{ ...styles.row, borderBottom:'none' }}><span style={styles.profileLabel}>Bio</span><span style={{ ...styles.profileVal, color:'#888780' }}>{form.bio || '—'}</span></div>
+          </>
+        )}
+      </div>
+      <div style={styles.card}>
+        <div style={styles.cardTitle}>Account</div>
+        <div style={styles.row}><span style={styles.profileLabel}>Email</span><span style={styles.profileVal}>{profile?.email || session?.user?.email || '—'}</span></div>
+        <div style={{ ...styles.row, borderBottom: changingPassword ? 'none' : 'none' }}><span style={styles.profileLabel}>Status</span><span style={styles.profileVal}><span style={styles.badge('approved')}>Approved</span></span></div>
+        {!changingPassword ? (
+          <div style={{ marginTop:12 }}>
+            <button style={styles.outlineBtn} onClick={() => setChangingPassword(true)}>Change password</button>
+          </div>
+        ) : (
+          <form onSubmit={handlePasswordChange} style={{ marginTop:12 }}>
+            <label style={styles.label}>New password</label>
+            <input style={styles.input} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required placeholder="At least 8 characters" minLength={8} />
+            <label style={styles.label}>Confirm new password</label>
+            <input style={styles.input} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required placeholder="Repeat your new password" />
+            {passwordError && <p style={{ fontSize:13, color:'#a32d2d', marginBottom:10 }}>{passwordError}</p>}
+            {passwordSuccess && <p style={{ fontSize:13, color:'#3B6D11', marginBottom:10 }}>✓ Password updated!</p>}
+            <div style={{ display:'flex', gap:8 }}>
+              <button type="button" style={styles.outlineBtn} onClick={() => { setChangingPassword(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); }}>Cancel</button>
+              <button type="submit" style={{ ...styles.addBtn, margin:0 }} disabled={savingPassword}>{savingPassword ? 'Saving...' : 'Update password'}</button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EarningsTab() {
+  return (
+    <div>
+      <div style={styles.pageTitle}>Earnings</div>
+      <div style={styles.pageSub}>Your Late Bloomers payouts</div>
+      <div style={styles.card}>
+        <div style={styles.emptyState}>
+          <p style={{ fontSize:24, marginBottom:8 }}>💷</p>
+          <p style={{ fontWeight:500, color:'#2c2c2a', marginBottom:6 }}>Earnings coming soon</p>
+          <p>Once Late Bloomers processes its first payouts, your earnings history will appear here. Payouts will go to your registered bank account every Monday.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [session, setSession] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [tab, setTab] = React.useState('listings');
+  const [profile, setProfile] = React.useState(null);
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) loadProfile(session.user.email);
+      setLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) loadProfile(session.user.email);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function loadProfile(email) {
+    const { data } = await supabase.from('customers').select('*').eq('email', email).eq('type', 'florist').single();
+    if (data) setProfile({ ...data, bio: data.notes });
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setSession(null);
+    setProfile(null);
+  }
+
+  if (loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', color:'#888780', fontSize:14 }}>
+      Loading...
+    </div>
+  );
+
+  if (!session) return <LoginScreen />;
+
+  const navItems = [
+    { key:'listings', label:"Today's listings", icon:'🌷' },
+    { key:'orders', label:'Orders', icon:'🛍️' },
+    { key:'shop', label:'My shop', icon:'🏪' },
+    { key:'earnings', label:'Earnings', icon:'💷' },
+  ];
+
+  return (
+    <div style={styles.dash}>
+      <div style={styles.sidebar}>
+        <div style={styles.logoArea}>
+          <div style={styles.logoName}>🌸 Late Bloomers</div>
+          <div style={styles.logoSub}>{profile?.shop_name || session.user.email}</div>
+        </div>
+        {navItems.map(n => (
+          <div key={n.key} style={styles.navItem(tab === n.key)} onClick={() => setTab(n.key)}>
+            <span>{n.icon}</span> {n.label}
+          </div>
+        ))}
+        <div style={styles.sidebarFooter} onClick={handleLogout}>↩ Log out</div>
+      </div>
+      <div style={styles.main}>
+        {tab === 'listings' && <ListingsTab />}
+        {tab === 'orders' && <OrdersTab />}
+        {tab === 'shop' && <ShopTab profile={profile} onProfileUpdate={p => setProfile(p)} session={session} />}
+        {tab === 'earnings' && <EarningsTab />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
