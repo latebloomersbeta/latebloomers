@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Late Bloomers — Florist dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f5f0; color: #1a1a1a; min-height: 100vh; }
+    input, textarea, select, button { font-family: inherit; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { createClient } = supabase;
+const supabaseClient = createClient(
+  "https://azelftspngjhmqrjtxby.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc"
+);
+
+const LOGO_URL = "https://latebloomersbeta.github.io/latebloomers/logo.png";
+
+const c = {
+  green: '#1B4D1E', mid: '#2D7A32', cream: '#F5F0E8', dark: '#EDE6D6',
+  white: '#FFFFFF', text: '#1A1A1A', soft: '#5A5A5A', yellow: '#ffd21f'
+};
+
+const styles = {
+  dash:        { display: 'flex', minHeight: '100vh' },
+  sidebar:     { width: 220, background: c.green, display: 'flex', flexDirection: 'column', padding: '24px 0', minHeight: '100vh', position: 'sticky', top: 0 },
+  logoArea:    { padding: '0 20px 24px', borderBottom: 'rgba(255,255,255,0.12) 1px solid', marginBottom: 12 },
+  logoName:    { color: c.yellow, fontWeight: 900, fontSize: 15 },
+  logoSub:     { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 },
+  navItem:     (a) => ({ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', cursor: 'pointer', background: a ? 'rgba(255,255,255,0.12)' : 'transparent', color: a ? '#fff' : 'rgba(255,255,255,0.65)', fontWeight: a ? 700 : 500, fontSize: 14, borderLeft: a ? `3px solid ${c.yellow}` : '3px solid transparent' }),
+  sidebarFoot: { padding: '12px 20px', color: 'rgba(255,255,255,0.5)', fontSize: 13, cursor: 'pointer', marginTop: 'auto' },
+  main:        { flex: 1, padding: 32, maxWidth: 800 },
+  pageTitle:   { fontSize: 22, fontWeight: 800, color: c.green, marginBottom: 20 },
+  card:        { background: c.white, borderRadius: 12, padding: 20, border: `1px solid ${c.dark}`, marginBottom: 14 },
+  label:       { fontSize: 12, fontWeight: 700, color: c.soft, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 },
+  input:       { width: '100%', padding: '11px 14px', borderRadius: 8, border: `1.5px solid ${c.dark}`, fontSize: 14, outline: 'none', marginBottom: 14 },
+  textarea:    { width: '100%', padding: '11px 14px', borderRadius: 8, border: `1.5px solid ${c.dark}`, fontSize: 14, outline: 'none', marginBottom: 14, minHeight: 90, resize: 'vertical' },
+  row:         { display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' },
+  btn:         (col) => ({ padding: '10px 20px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', background: col === 'green' ? c.green : col === 'red' ? '#c0392b' : c.dark, color: col === 'green' || col === 'red' ? '#fff' : c.text }),
+  chip:        { padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700, background: '#e6f4e8', color: c.mid },
+  empty:       { textAlign: 'center', padding: 48, color: c.soft, fontSize: 14 },
+  loginWrap:   { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.cream },
+  loginBox:    { background: c.white, borderRadius: 16, padding: 40, width: 360, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' },
+  loginInput:  { width: '100%', padding: '12px 14px', borderRadius: 8, border: `1.5px solid ${c.dark}`, fontSize: 14, outline: 'none', marginBottom: 12 },
+  loginBtn:    { width: '100%', padding: 13, borderRadius: 8, border: 'none', background: c.green, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }
+};
+
+// ── LOGIN ──
+function LoginScreen() {
+  const [email, setEmail]     = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [err, setErr]         = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleLogin() {
+    setErr(''); setLoading(true);
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) setErr('Wrong email or password.');
+    setLoading(false);
+  }
+
+  return (
+    <div style={styles.loginWrap}>
+      <div style={styles.loginBox}>
+        <img src={LOGO_URL} alt="Late Bloomers" style={{ width: 80, display: 'block', margin: '0 auto 20px' }} />
+        <div style={{ fontSize: 20, fontWeight: 800, color: c.green, textAlign: 'center', marginBottom: 4 }}>Florist login</div>
+        <div style={{ fontSize: 13, color: c.soft, textAlign: 'center', marginBottom: 24 }}>Late Bloomers partner portal</div>
+        <input style={styles.loginInput} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
+        <input style={styles.loginInput} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+        {err && <div style={{ color: '#c0392b', fontSize: 13, marginBottom: 10 }}>{err}</div>}
+        <button style={styles.loginBtn} onClick={handleLogin} disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+      </div>
+    </div>
+  );
+}
+
+// ── ADD LISTING FORM ──
+function AddListingForm({ profile, onSaved, onCancel }) {
+  const [saving, setSaving] = React.useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const title = (data.get('title') || '').trim();
+    const price = (data.get('price') || '').trim();
+    const originalPrice = (data.get('original_price') || '').trim();
+    const desc  = (data.get('description') || '').trim();
+    const qty   = (data.get('quantity') || '').trim();
+    const col   = (data.get('collect_by') || '').trim();
+    const type  = (data.get('type') || 'bunch').trim();
+
+    if (!title) { alert('Please add a bundle name.'); return; }
+    if (!profile?.email)  { alert('Profile not loaded yet, please wait a moment.'); return; }
+
+    setSaving(true);
+    const { error } = await supabaseClient.from('listings').insert({
+      name:           title,
+      title:          title,
+      description:    desc || null,
+      price:          price ? parseFloat(price) : null,
+      original_price: originalPrice ? parseFloat(originalPrice) : null,
+      quantity:       qty ? parseInt(qty) : null,
+      collect_by:     col || null,
+      florist_email:  profile.email,
+      florist_id:     profile.id || null,
+      shop_name:      profile.shop_name || '',
+      area:           profile.area || profile.postcode || '',
+      active:         false,
+      status:         'active',
+      type:           type,
+    });
+
+    if (error) {
+      alert('Could not save: ' + error.message);
+      setSaving(false);
+      return;
+    }
+    onSaved();
+  }
+
+  const inp = { width: '100%', padding: '11px 14px', borderRadius: 8, border: '1.5px solid #EDE6D6', fontSize: 14, outline: 'none', fontFamily: 'inherit' };
+  const lbl = { fontSize: 12, fontWeight: 700, color: '#5A5A5A', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6, display: 'block' };
+
+  return (
+    <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '2px solid #2D7A32', marginBottom: 14 }}>
+      <div style={{ fontWeight: 700, color: '#1B4D1E', marginBottom: 16 }}>New listing</div>
+      <form onSubmit={handleSubmit}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          {['Bouquet', 'Bunch', 'Surprise bunch'].map(t => (
+            <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1.5px solid #EDE6D6', borderRadius: 100, padding: '7px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: '#fffdf7' }}>
+              <input type="radio" name="type" value={t.toLowerCase()} defaultChecked={t === 'Bouquet'} style={{ accentColor: '#1B4D1E' }} />
+              {t}
+            </label>
+          ))}
+        </div>
+        <label style={lbl}>Bundle name</label>
+        <input name="title" style={{ ...inp, marginBottom: 14 }} placeholder="e.g. Mixed seasonal bunch" />
+        <label style={lbl}>Description (optional)</label>
+        <textarea name="description" style={{ ...inp, marginBottom: 14, minHeight: 80, resize: 'vertical' }} placeholder="What's in the bunch..." />
+        <div style={{ background: '#f5f0e8', borderRadius: 8, padding: '12px 14px', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#5A5A5A', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Suggested pricing</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[{ label: 'End of life', sub: '~65% off', pct: 0.35 }, { label: 'Surplus', sub: '~45% off', pct: 0.55 }, { label: 'Premium', sub: '~25% off', pct: 0.75 }].map(tier => (
+              <button key={tier.label} type="button"
+                style={{ fontSize: 12, fontWeight: 700, padding: '6px 12px', borderRadius: 100, border: '1.5px solid #1B4D1E', background: '#fff', color: '#1B4D1E', cursor: 'pointer' }}
+                onClick={() => {
+                  const origInput = document.querySelector('input[name="original_price"]');
+                  const priceInput = document.querySelector('input[name="price"]');
+                  if (origInput?.value) {
+                    priceInput.value = Math.round(parseFloat(origInput.value) * tier.pct);
+                  } else {
+                    alert('Enter the original price first, then click a tier.');
+                  }
+                }}>
+                {tier.label} <span style={{ opacity: .6 }}>{tier.sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div>
+            <label style={lbl}>Price (£)</label>
+            <input name="price" type="text" inputMode="decimal" style={inp} placeholder="e.g. 10" />
+          </div>
+          <div>
+            <label style={lbl}>Original price (£)</label>
+            <input name="original_price" type="text" inputMode="decimal" style={inp} placeholder="e.g. 28" />
+          </div>
+          <div>
+            <label style={lbl}>Quantity</label>
+            <input name="quantity" type="text" inputMode="numeric" style={inp} placeholder="e.g. 5" />
+          </div>
+          <div>
+            <label style={lbl}>Collect by</label>
+            <input name="collect_by" type="time" style={inp} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="submit" style={{ padding: '10px 20px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', background: '#1B4D1E', color: '#fff' }} disabled={saving}>
+            {saving ? 'Saving...' : 'Add listing'}
+          </button>
+          <button type="button" style={{ padding: '10px 20px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', background: '#EDE6D6', color: '#1A1A1A' }} onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ── LISTINGS TAB ──
+function ListingsTab({ profile }) {
+  const [listings, setListings] = React.useState([]);
+  const [loading, setLoading]   = React.useState(true);
+  const [showForm, setShowForm] = React.useState(false);
+
+  React.useEffect(() => { if (profile?.email) loadListings(); else setLoading(false); }, [profile]);
+
+  async function loadListings() {
+    setLoading(true);
+    const { data, error } = await supabaseClient.from('listings').select('*').eq('florist_email', profile.email).order('created_at', { ascending: false });
+    if (error) console.error('Load listings error:', error.message);
+    setListings(data || []);
+    setLoading(false);
+  }
+
+  async function toggleActive(id, current) {
+    await supabaseClient.from('listings').update({ active: !current }).eq('id', id);
+    setListings(ls => ls.map(l => l.id === id ? { ...l, active: !current } : l));
+  }
+
+  async function deleteListing(id) {
+    await supabaseClient.from('listings').delete().eq('id', id);
+    setListings(ls => ls.filter(l => l.id !== id));
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={styles.pageTitle}>Today's listings</div>
+        {!showForm && <button style={styles.btn('green')} onClick={() => setShowForm(true)}>+ Add listing</button>}
+      </div>
+
+      {showForm && (
+        <AddListingForm
+          profile={profile}
+          onSaved={async () => { setShowForm(false); await loadListings(); }}
+          onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {loading && <div style={styles.empty}>Loading...</div>}
+      {!loading && listings.length === 0 && !showForm && <div style={styles.empty}>No listings yet. Add your first one above.</div>}
+      {listings.map(l => (
+        <div key={l.id} style={styles.card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: c.green, marginBottom: 4 }}>{l.title || l.name}</div>
+              {l.description && <div style={{ fontSize: 13, color: c.soft, marginBottom: 8 }}>{l.description}</div>}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {l.original_price && <span style={{ ...styles.chip, background: '#f5f0e8', color: '#5A5A5A', textDecoration: 'line-through' }}>£{l.original_price}</span>}
+                <span style={styles.chip}>£{l.price}</span>
+                {l.type && <span style={{ ...styles.chip, background: '#f0f0f0', color: '#444', textTransform: 'capitalize' }}>{l.type}</span>}
+                {l.quantity && <span style={styles.chip}>{l.quantity} left</span>}
+                {l.collect_by && <span style={styles.chip}>Collect by {l.collect_by}</span>}
+                <span style={{ ...styles.chip, background: l.active ? '#e6f4e8' : '#fff3cd', color: l.active ? c.mid : '#856404' }}>{l.active ? 'Live' : 'Hidden'}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={styles.btn(l.active ? null : 'green')} onClick={() => toggleActive(l.id, l.active)}>{l.active ? 'Hide' : 'Go live'}</button>
+              <button style={styles.btn('red')} onClick={() => deleteListing(l.id)}>Delete</button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── ORDERS TAB ──
+function OrdersTab({ profile }) {
+  const [orders, setOrders]   = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function load() {
+      const { data } = await supabaseClient.from('orders').select('*').eq('florist_email', profile?.email || '').order('created_at', { ascending: false });
+      setOrders(data || []);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <div style={styles.pageTitle}>Orders</div>
+      {loading && <div style={styles.empty}>Loading...</div>}
+      {!loading && orders.length === 0 && <div style={styles.empty}>No orders yet. They will appear here once customers start buying.</div>}
+      {orders.map(o => (
+        <div key={o.id} style={styles.card}>
+          <div style={{ fontWeight: 700, color: c.green, marginBottom: 4 }}>{o.bundle_name || 'Order'}</div>
+          <div style={{ fontSize: 13, color: c.soft }}>Customer: {o.customer_email} &middot; £{o.total} &middot; {o.created_at?.slice(0,10)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── SHOP TAB ──
+function ShopTab({ profile, onProfileUpdate, session }) {
+  const [form, setForm]               = React.useState({ shop_name: '', area: '', postcode: '', bio: '' });
+  const [saving, setSaving]           = React.useState(false);
+  const [saved, setSaved]             = React.useState(false);
+  const [changingPw, setChangingPw]   = React.useState(false);
+  const [newPw, setNewPw]             = React.useState('');
+  const [confirmPw, setConfirmPw]     = React.useState('');
+  const [pwErr, setPwErr]             = React.useState('');
+  const [pwOk, setPwOk]               = React.useState(false);
+  const [savingPw, setSavingPw]       = React.useState(false);
+
+  React.useEffect(() => {
+    if (profile) setForm({ shop_name: profile.shop_name || '', area: profile.area || '', postcode: profile.postcode || '', bio: profile.bio || '' });
+  }, [profile]);
+
+  async function saveProfile() {
+    setSaving(true);
+    await supabaseClient.from('florists').update({ shop_name: form.shop_name, area: form.area, postcode: form.postcode, bio: form.bio }).eq('email', session?.user?.email);
+    onProfileUpdate({ ...profile, ...form });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    setSaving(false);
+  }
+
+  async function changePassword() {
+    setPwErr('');
+    if (newPw !== confirmPw) { setPwErr('Passwords do not match.'); return; }
+    if (newPw.length < 8) { setPwErr('Password must be at least 8 characters.'); return; }
+    setSavingPw(true);
+    const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+    if (error) { setPwErr('Could not update password. Try again.'); }
+    else { setPwOk(true); setNewPw(''); setConfirmPw(''); setTimeout(() => { setChangingPw(false); setPwOk(false); }, 2000); }
+    setSavingPw(false);
+  }
+
+  return (
+    <div>
+      <div style={styles.pageTitle}>My shop</div>
+      <div style={styles.card}>
+        <div style={{ fontWeight: 700, color: c.green, marginBottom: 16 }}>Shop details</div>
+        <div style={styles.label}>Shop name</div>
+        <input style={styles.input} value={form.shop_name} onChange={e => setForm(f => ({ ...f, shop_name: e.target.value }))} placeholder="Your shop name" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <div style={styles.label}>Area (e.g. Hackney)</div>
+            <input style={styles.input} value={form.area} onChange={e => setForm(f => ({ ...f, area: e.target.value }))} placeholder="Area" />
+          </div>
+          <div>
+            <div style={styles.label}>Postcode</div>
+            <input style={styles.input} value={form.postcode} onChange={e => setForm(f => ({ ...f, postcode: e.target.value }))} placeholder="E8" />
+          </div>
+        </div>
+        <div style={styles.label}>About your shop (optional)</div>
+        <textarea style={styles.textarea} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="Tell customers a bit about your shop..." />
+        <button style={styles.btn('green')} onClick={saveProfile} disabled={saving}>{saved ? 'Saved!' : saving ? 'Saving...' : 'Save changes'}</button>
+      </div>
+
+      <div style={styles.card}>
+        <div style={{ fontWeight: 700, color: c.green, marginBottom: 8 }}>Password</div>
+        {!changingPw && <button style={styles.btn(null)} onClick={() => setChangingPw(true)}>Change password</button>}
+        {changingPw && (
+          <div>
+            <input style={styles.input} type="password" placeholder="New password" value={newPw} onChange={e => setNewPw(e.target.value)} />
+            <input style={styles.input} type="password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
+            {pwErr && <div style={{ color: '#c0392b', fontSize: 13, marginBottom: 8 }}>{pwErr}</div>}
+            {pwOk  && <div style={{ color: c.mid,    fontSize: 13, marginBottom: 8 }}>Password updated!</div>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={styles.btn('green')} onClick={changePassword} disabled={savingPw}>{savingPw ? 'Saving...' : 'Update password'}</button>
+              <button style={styles.btn(null)} onClick={() => { setChangingPw(false); setPwErr(''); }}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── EARNINGS TAB ──
+function EarningsTab() {
+  return (
+    <div>
+      <div style={styles.pageTitle}>Earnings</div>
+      <div style={styles.card}>
+        <div style={{ fontWeight: 700, color: c.green, marginBottom: 8 }}>Coming soon</div>
+        <div style={{ fontSize: 14, color: c.soft, lineHeight: 1.6 }}>Your earnings dashboard will appear here once payments go live. Payouts will go to your registered bank account every Monday.</div>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ──
+function App() {
+  const [session, setSession] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [tab, setTab]         = React.useState('listings');
+  const [profile, setProfile] = React.useState(null);
+
+  React.useEffect(() => {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) loadProfile(session.user.email);
+      setLoading(false);
+    });
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_e, session) => {
+      setSession(session);
+      if (session) loadProfile(session.user.email);
+      else setProfile(null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function loadProfile(email) {
+    const { data } = await supabaseClient.from('florists').select('*').eq('email', email).maybeSingle();
+    if (data) {
+      setProfile(data);
+    } else {
+      // florists row doesn't exist yet — use minimal profile from session
+      setProfile({ email, shop_name: '', area: '', postcode: '', id: null });
+    }
+  }
+
+  async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    setSession(null); setProfile(null);
+  }
+
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: c.soft, fontSize: 14 }}>Loading...</div>;
+  if (!session) return <LoginScreen />;
+
+  const nav = [
+    { key: 'listings', label: "Today's listings", icon: '🌷' },
+    { key: 'orders',   label: 'Orders',            icon: '🛍️' },
+    { key: 'shop',     label: 'My shop',            icon: '🏪' },
+    { key: 'earnings', label: 'Earnings',           icon: '💷' },
+  ];
+
+  return (
+    <div style={styles.dash}>
+      <div style={styles.sidebar}>
+        <div style={styles.logoArea}>
+          <img src={LOGO_URL} alt="Late Bloomers" style={{ width: 48, marginBottom: 8 }} />
+          <div style={styles.logoName}>Late Bloomers</div>
+          <div style={styles.logoSub}>{profile?.shop_name || session.user.email}</div>
+        </div>
+        {nav.map(n => (
+          <div key={n.key} style={styles.navItem(tab === n.key)} onClick={() => setTab(n.key)}>
+            <span>{n.icon}</span> {n.label}
+          </div>
+        ))}
+        <div style={styles.sidebarFoot} onClick={handleLogout}>↩ Log out</div>
+      </div>
+      <div style={styles.main}>
+        {tab === 'listings' && <ListingsTab profile={profile} />}
+        {tab === 'orders'   && <OrdersTab   profile={profile} />}
+        {tab === 'shop'     && <ShopTab     profile={profile} onProfileUpdate={p => setProfile(p)} session={session} />}
+        {tab === 'earnings' && <EarningsTab />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
