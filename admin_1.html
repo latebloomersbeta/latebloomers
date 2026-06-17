@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Late Bloomers Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f5f0; color: #1a1a1a; min-height: 100vh; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const SUPABASE_URL = "https://azelftspngjhmqrjtxby.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc";
+const RESEND_KEY  = "re_fJ8BX3DR_4yFgV1ReHNZ2pLfpphQUtArk";
+const LOGO_URL    = "https://latebloomersbeta.github.io/latebloomers/logo.png";
+const ADMIN_PASS  = "latebloomers2026";
+
+const db = (path, opts = {}) => fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+  ...opts,
+  headers: {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Prefer': 'return=minimal',
+    ...(opts.headers || {})
+  }
+});
+
+const c = {
+  green: '#1B4D1E', greenMid: '#2D7A32', cream: '#F5F0E8', creamDark: '#EDE6D6',
+  white: '#FFFFFF', text: '#1A1A1A', soft: '#5A5A5A', petal: '#E8C8C0', yellow: '#ffd21f'
+};
+
+const s = {
+  page:     { minHeight: '100vh', background: c.cream, display: 'flex' },
+  sidebar:  { width: 220, background: c.green, display: 'flex', flexDirection: 'column', padding: '24px 0', minHeight: '100vh', position: 'sticky', top: 0 },
+  logo:     { padding: '0 20px 24px', borderBottom: `1px solid rgba(255,255,255,0.12)`, marginBottom: 12 },
+  logoName: { color: c.yellow, fontWeight: 900, fontSize: 15, letterSpacing: '-.01em' },
+  logoSub:  { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 },
+  nav:      (active) => ({ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', cursor: 'pointer', background: active ? 'rgba(255,255,255,0.12)' : 'transparent', color: active ? '#fff' : 'rgba(255,255,255,0.65)', fontWeight: active ? 700 : 500, fontSize: 14, borderLeft: active ? `3px solid ${c.yellow}` : '3px solid transparent', transition: 'all .15s' }),
+  main:     { flex: 1, padding: 32, maxWidth: 900 },
+  title:    { fontSize: 24, fontWeight: 800, color: c.green, marginBottom: 4 },
+  sub:      { fontSize: 14, color: c.soft, marginBottom: 28 },
+  card:     { background: c.white, borderRadius: 12, padding: 20, border: `1px solid ${c.creamDark}`, marginBottom: 12 },
+  row:      { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
+  name:     { fontWeight: 700, fontSize: 15, color: c.green, marginBottom: 2 },
+  detail:   { fontSize: 13, color: c.soft },
+  badge:    (col) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 700, background: col === 'green' ? '#e6f4e8' : col === 'red' ? '#fde8e8' : '#f5f0e8', color: col === 'green' ? c.greenMid : col === 'red' ? '#c0392b' : c.soft }),
+  btn:      (col) => ({ padding: '7px 14px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', background: col === 'green' ? c.green : col === 'red' ? '#c0392b' : c.creamDark, color: col === 'green' || col === 'red' ? '#fff' : c.text }),
+  empty:    { textAlign: 'center', padding: '48px 24px', color: c.soft, fontSize: 14 },
+  statRow:  { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 },
+  stat:     { background: c.white, borderRadius: 12, padding: '20px 24px', border: `1px solid ${c.creamDark}` },
+  statNum:  { fontSize: 32, fontWeight: 800, color: c.green, lineHeight: 1 },
+  statLbl:  { fontSize: 12, color: c.soft, marginTop: 4 },
+  login:    { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.cream },
+  loginBox: { background: c.white, borderRadius: 16, padding: 40, width: 360, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' },
+  input:    { width: '100%', padding: '12px 14px', borderRadius: 8, border: `1.5px solid ${c.creamDark}`, fontSize: 14, fontFamily: 'inherit', outline: 'none', marginBottom: 12 },
+  bigBtn:   { width: '100%', padding: '13px', borderRadius: 8, border: 'none', background: c.green, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' },
+  csvBtn:   { padding: '9px 18px', borderRadius: 100, border: `1.5px solid ${c.creamDark}`, background: c.white, fontWeight: 700, fontSize: 12, cursor: 'pointer', color: c.text }
+};
+
+async function sendApprovalEmail(florist) {
+  const html = `
+    <div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#F5F0E8;">
+      <div style="text-align:center;margin-bottom:32px;">
+        <img src="${LOGO_URL}" alt="Late Bloomers" style="width:120px;" />
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:32px;">
+        <h1 style="font-size:22px;color:#1B4D1E;margin-bottom:16px;">You're in — welcome to Late Bloomers 🌸</h1>
+        <p style="font-size:15px;color:#2D7A32;margin-bottom:16px;">Hi ${florist.name},</p>
+        <p style="font-size:15px;color:#444;line-height:1.7;margin-bottom:16px;">Thank you for signing up to Late Bloomers. We're thrilled to have you on board.</p>
+        <p style="font-size:15px;color:#444;line-height:1.7;margin-bottom:16px;">We're putting the finishing touches on the platform and will be in touch very soon with everything you need to get your shop listed and start turning your end-of-day stems into extra revenue.</p>
+        <p style="font-size:15px;color:#444;line-height:1.7;margin-bottom:32px;">In the meantime, if you have any questions at all, just reply to this email and we'll get back to you.</p>
+        <p style="font-size:15px;color:#444;">Can't wait to have you on the platform.</p>
+        <p style="font-size:15px;color:#1B4D1E;font-weight:500;margin-top:8px;">Clem & the Late Bloomers team</p>
+      </div>
+      <p style="font-size:12px;color:#888;text-align:center;margin-top:24px;">© 2026 LateBloomers. Made with love in London.</p>
+    </div>`;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + RESEND_KEY },
+      body: JSON.stringify({ from: "Clem at Late Bloomers <onboarding@resend.dev>", to: [florist.email], subject: "You're in — welcome to Late Bloomers 🌸", html })
+    });
+  } catch(e) { console.error("Email failed", e); }
+}
+
+// ── LOGIN ──
+function Login({ onLogin }) {
+  const [email, setEmail] = React.useState('');
+  const [pass, setPass]   = React.useState('');
+  const [err, setErr]     = React.useState('');
+  function attempt() {
+    if (pass === ADMIN_PASS) { onLogin(); }
+    else { setErr('Wrong password.'); }
+  }
+  return (
+    <div style={s.login}>
+      <div style={s.loginBox}>
+        <img src={LOGO_URL} alt="Late Bloomers" style={{ width: 80, display: 'block', margin: '0 auto 20px' }} />
+        <div style={{ fontSize: 20, fontWeight: 800, color: c.green, textAlign: 'center', marginBottom: 4 }}>Admin dashboard</div>
+        <div style={{ fontSize: 13, color: c.soft, textAlign: 'center', marginBottom: 24 }}>Late Bloomers internal use only</div>
+        <input style={s.input} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
+        <input style={s.input} type="password" placeholder="Password" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && attempt()} />
+        {err && <div style={{ color: '#c0392b', fontSize: 13, marginBottom: 8 }}>{err}</div>}
+        <button style={s.bigBtn} onClick={attempt}>Sign in</button>
+      </div>
+    </div>
+  );
+}
+
+// ── FLORIST ONBOARDING TAB ──
+function FloristTab() {
+  const [florists, setFlorists] = React.useState([]);
+  const [loading, setLoading]   = React.useState(true);
+  const [filter, setFilter]     = React.useState('all');
+
+  React.useEffect(() => { loadFlorists(); }, []);
+
+  async function loadFlorists() {
+    setLoading(true);
+    const res = await db('florists?select=*&order=created_at.desc', { headers: { 'Prefer': '' } });
+    const data = await res.json();
+    setFlorists(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }
+
+  async function handleAction(id, approved) {
+    const florist = florists.find(f => f.id === id);
+    if (approved && florist) {
+      sendApprovalEmail(florist);
+      // Invite florist to set up their account
+      try {
+        await fetch(`${SUPABASE_URL}/auth/v1/invite`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({ email: florist.email, data: { shop_name: florist.shop_name }, redirect_to: 'https://latebloomersbeta.github.io/latebloomers/florist.html' })
+        });
+      } catch(e) { console.error("Invite failed", e); }
+    }
+    await db(`florists?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ approved }) });
+    setFlorists(fs => fs.map(f => f.id === id ? { ...f, approved } : f));
+  }
+
+  function downloadCSV() {
+    const rows = [['Name','Email','Shop','Postcode','Area','Approved','Date']];
+    florists.forEach(f => rows.push([f.name, f.email, f.shop_name || '', f.postcode || '', f.area || '', f.approved ? 'Yes' : 'No', f.created_at?.slice(0,10) || '']));
+    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'florists.csv'; a.click();
+  }
+
+  const filtered = florists.filter(f =>
+    filter === 'all' ? true : filter === 'approved' ? f.approved === true : f.approved !== true
+  );
+
+  return (
+    <div>
+      <div style={s.row}>
+        <div>
+          <div style={s.title}>Florist onboarding</div>
+          <div style={s.sub}>{florists.length} sign-ups total</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['all','pending','approved'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{ ...s.btn(filter === f ? 'green' : null), textTransform: 'capitalize' }}>{f}</button>
+          ))}
+          <button style={s.csvBtn} onClick={downloadCSV}>Download CSV</button>
+        </div>
+      </div>
+      {loading && <div style={s.empty}>Loading...</div>}
+      {!loading && filtered.length === 0 && <div style={s.empty}>No florists yet.</div>}
+      {filtered.map(f => (
+        <div key={f.id} style={s.card}>
+          <div style={s.row}>
+            <div>
+              <div style={s.name}>{f.shop_name || f.name}</div>
+              <div style={s.detail}>{f.name} &middot; {f.email} &middot; {f.area || f.postcode || 'No location'}</div>
+              <div style={{ marginTop: 6 }}>
+                <span style={s.badge(f.approved ? 'green' : 'neutral')}>{f.approved ? 'Approved' : 'Pending'}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {!f.approved && <button style={s.btn('green')} onClick={() => handleAction(f.id, true)}>Approve</button>}
+              {f.approved  && <button style={s.btn('red')}   onClick={() => handleAction(f.id, false)}>Revoke</button>}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── CUSTOMERS TAB ──
+function CustomersTab() {
+  const [customers, setCustomers] = React.useState([]);
+  const [loading, setLoading]     = React.useState(true);
+
+  React.useEffect(() => { loadCustomers(); }, []);
+
+  async function loadCustomers() {
+    setLoading(true);
+    const res = await db('customers?select=*&order=created_at.desc', { headers: { 'Prefer': '' } });
+    const data = await res.json();
+    setCustomers(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }
+
+  function downloadCSV() {
+    const rows = [['Name','Email','Postcode','Date']];
+    customers.forEach(c => rows.push([c.name, c.email, c.postcode || '', c.created_at?.slice(0,10) || '']));
+    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'customers.csv'; a.click();
+  }
+
+  return (
+    <div>
+      <div style={s.row}>
+        <div>
+          <div style={s.title}>Customers</div>
+          <div style={s.sub}>{customers.length} sign-ups on the waitlist</div>
+        </div>
+        <button style={s.csvBtn} onClick={downloadCSV} disabled={customers.length === 0}>Download CSV</button>
+      </div>
+      {loading && <div style={s.empty}>Loading...</div>}
+      {!loading && customers.length === 0 && <div style={s.empty}>No customer sign-ups yet.</div>}
+      {customers.map(c => (
+        <div key={c.id} style={s.card}>
+          <div style={s.name}>{c.name}</div>
+          <div style={s.detail}>{c.email} &middot; {c.postcode || 'No postcode'} &middot; Signed up {c.created_at?.slice(0,10) || 'unknown'}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── OVERVIEW TAB ──
+function OverviewTab({ setTab }) {
+  const [stats, setStats] = React.useState({ customers: 0, florists: 0, approved: 0 });
+
+  React.useEffect(() => {
+    async function load() {
+      const [cr, fr] = await Promise.all([
+        db('customers?select=id', { headers: { 'Prefer': '', 'Range-Unit': 'items', 'Range': '0-0' } }),
+        db('florists?select=id,approved', { headers: { 'Prefer': '' } })
+      ]);
+      const customers = parseInt(cr.headers.get('content-range')?.split('/')[1] || 0);
+      const floristData = await fr.json();
+      const florists = Array.isArray(floristData) ? floristData.length : 0;
+      const approved = Array.isArray(floristData) ? floristData.filter(f => f.approved).length : 0;
+      setStats({ customers, florists, approved });
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <div style={s.title}>Overview</div>
+      <div style={{ ...s.sub, marginBottom: 24 }}>What's happening at Late Bloomers</div>
+      <div style={s.statRow}>
+        <div style={s.stat}><div style={s.statNum}>{stats.customers}</div><div style={s.statLbl}>Customer sign-ups</div></div>
+        <div style={s.stat}><div style={s.statNum}>{stats.florists}</div><div style={s.statLbl}>Florist applications</div></div>
+        <div style={s.stat}><div style={s.statNum}>{stats.approved}</div><div style={s.statLbl}>Approved florists</div></div>
+      </div>
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button style={s.btn('green')} onClick={() => setTab('florists')}>Review florists</button>
+        <button style={s.btn(null)} onClick={() => setTab('customers')}>View customers</button>
+      </div>
+    </div>
+  );
+}
+
+// ── SUGGESTIONS TAB ──
+function SuggestionsTab() {
+  const [suggestions, setSuggestions] = React.useState([]);
+  const [loading, setLoading]         = React.useState(true);
+
+  React.useEffect(() => { load(); }, []);
+
+  async function load() {
+    setLoading(true);
+    const res = await db('suggestions?select=*&order=created_at.desc', { headers: { 'Prefer': '' } });
+    const data = await res.json();
+    setSuggestions(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }
+
+  async function dismiss(id) {
+    await db(`suggestions?id=eq.${id}`, { method: 'DELETE' });
+    setSuggestions(ss => ss.filter(s => s.id !== id));
+  }
+
+  return (
+    <div>
+      <div style={s.title}>Florist suggestions</div>
+      <div style={{ ...s.sub, marginBottom: 24 }}>{suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''} from customers</div>
+      {loading && <div style={s.empty}>Loading...</div>}
+      {!loading && suggestions.length === 0 && <div style={s.empty}>No suggestions yet.</div>}
+      {suggestions.map(sg => (
+        <div key={sg.id} style={s.card}>
+          <div style={s.row}>
+            <div>
+              <div style={s.name}>{sg.shop_name}</div>
+              <div style={s.detail}>
+                {sg.area && <span>{sg.area} · </span>}
+                {sg.submitted_by ? `Suggested by ${sg.submitted_by}` : 'Anonymous'}
+                {' · '}{sg.created_at?.slice(0,10)}
+              </div>
+            </div>
+            <button style={s.btn('red')} onClick={() => dismiss(sg.id)}>Dismiss</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── APP ──
+function App() {
+  const [authed, setAuthed] = React.useState(false);
+  const [tab, setTab]       = React.useState('overview');
+
+  if (!authed) return <Login onLogin={() => setAuthed(true)} />;
+
+  const nav = [
+    { key: 'overview',     label: 'Overview',           icon: '📊' },
+    { key: 'florists',     label: 'Florist onboarding', icon: '🌿' },
+    { key: 'customers',    label: 'Customers',           icon: '🌸' },
+    { key: 'suggestions',  label: 'Suggestions',         icon: '💡' },
+  ];
+
+  return (
+    <div style={s.page}>
+      <div style={s.sidebar}>
+        <div style={s.logo}>
+          <img src={LOGO_URL} alt="Late Bloomers" style={{ width: 48, marginBottom: 8 }} />
+          <div style={s.logoName}>Late Bloomers</div>
+          <div style={s.logoSub}>Admin dashboard</div>
+        </div>
+        {nav.map(n => (
+          <div key={n.key} style={s.nav(tab === n.key)} onClick={() => setTab(n.key)}>
+            <span>{n.icon}</span> {n.label}
+          </div>
+        ))}
+        <div style={{ flex: 1 }} />
+        <div style={{ ...s.nav(false), marginTop: 'auto' }} onClick={() => setAuthed(false)}>
+          <span>↩</span> Sign out
+        </div>
+      </div>
+      <div style={s.main}>
+        {tab === 'overview'    && <OverviewTab setTab={setTab} />}
+        {tab === 'florists'    && <FloristTab />}
+        {tab === 'customers'   && <CustomersTab />}
+        {tab === 'suggestions' && <SuggestionsTab />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
