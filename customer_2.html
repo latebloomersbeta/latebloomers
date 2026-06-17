@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Late Bloomers — My Garden</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background: #fbf6ea; color: #151515; min-height: 100vh; }
+    input, button { font-family: inherit; }
+    #root { min-height: 100vh; }
+
+    /* grain */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .18;
+      background-image: radial-gradient(#111 0.7px, transparent 0.7px);
+      background-size: 14px 14px;
+      mix-blend-mode: multiply;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { createClient } = supabase;
+const sb = createClient(
+  "https://azelftspngjhmqrjtxby.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc"
+);
+
+const LOGO = "https://latebloomersbeta.github.io/latebloomers/logo.png";
+
+const c = {
+  green:  '#0f4d1e',
+  green2: '#0a3414',
+  mid:    '#2D7A32',
+  cream:  '#fbf6ea',
+  cream2: '#f3eadb',
+  yellow: '#ffd21f',
+  yellow2:'#ffe977',
+  ink:    '#151515',
+  muted:  '#55705a',
+  white:  '#ffffff',
+  petal:  '#e8c0c8',
+};
+
+const s = {
+  page:    { minHeight: '100vh', background: c.cream },
+  nav:     { background: c.green, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 },
+  logo:    { display: 'flex', alignItems: 'center', gap: 10 },
+  logoTxt: { color: c.yellow, fontWeight: 900, fontSize: 17, letterSpacing: '-.03em' },
+  navName: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700 },
+  navOut:  { background: 'transparent', border: '1.5px solid rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.7)', padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 700, cursor: 'pointer' },
+  tabs:    { display: 'flex', gap: 0, borderBottom: `3px solid ${c.green}`, background: c.cream2, padding: '0 24px' },
+  tab:     (a) => ({ padding: '16px 20px', fontWeight: 900, fontSize: 14, cursor: 'pointer', background: 'transparent', border: 'none', borderBottom: a ? `3px solid ${c.yellow}` : '3px solid transparent', marginBottom: -3, color: a ? c.green : c.muted, letterSpacing: '.02em', textTransform: 'uppercase' }),
+  main:    { maxWidth: 900, margin: '0 auto', padding: '36px 24px' },
+  title:   { fontSize: 38, fontWeight: 1000, letterSpacing: '-.05em', color: c.green, textTransform: 'uppercase', lineHeight: .9, marginBottom: 6 },
+  sub:     { fontSize: 15, fontWeight: 700, color: c.muted, marginBottom: 28 },
+  card:    { background: c.white, border: `2px solid ${c.green}`, padding: 20, marginBottom: 14, boxShadow: '4px 4px 0 rgba(15,77,30,.12)' },
+  chip:    (col) => ({ display: 'inline-block', padding: '4px 12px', fontSize: 11, fontWeight: 900, letterSpacing: '.06em', textTransform: 'uppercase', background: col === 'green' ? '#e6f4e8' : col === 'yellow' ? c.yellow : col === 'red' ? '#fde8e8' : c.cream2, color: col === 'green' ? c.mid : col === 'yellow' ? c.green : col === 'red' ? '#c0392b' : c.muted }),
+  btn:     (col) => ({ padding: '10px 20px', border: `2px solid ${c.green}`, borderRadius: 0, fontWeight: 900, fontSize: 13, cursor: 'pointer', background: col === 'green' ? c.green : col === 'yellow' ? c.yellow : 'transparent', color: col === 'green' ? c.white : c.green, letterSpacing: '.04em', textTransform: 'uppercase', boxShadow: col ? `3px 3px 0 rgba(15,77,30,.2)` : 'none' }),
+  empty:   { textAlign: 'center', padding: '56px 24px', color: c.muted, fontWeight: 700, fontSize: 15 },
+  emptyIcon: { fontSize: 40, marginBottom: 12 },
+
+  // login
+  loginWrap: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.cream, padding: 24 },
+  loginBox:  { background: c.white, border: `3px solid ${c.green}`, padding: '40px 36px', width: '100%', maxWidth: 420, boxShadow: '8px 8px 0 rgba(15,77,30,.15)' },
+  inp:       { width: '100%', padding: '13px 14px', border: `2px solid ${c.green}`, background: '#fffdf7', fontSize: 15, fontWeight: 700, outline: 'none', marginBottom: 12, fontFamily: 'Arial, sans-serif' },
+};
+
+// ── LOGIN ──
+function LoginScreen({ onLogin }) {
+  const [mode, setMode]       = React.useState('login'); // login | signup | magic
+  const [email, setEmail]     = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [name, setName]       = React.useState('');
+  const [err, setErr]         = React.useState('');
+  const [msg, setMsg]         = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleLogin() {
+    setErr(''); setLoading(true);
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) setErr('Wrong email or password. Try again.');
+    setLoading(false);
+  }
+
+  async function handleSignup() {
+    setErr(''); setLoading(true);
+    if (!name.trim()) { setErr('Please add your name.'); setLoading(false); return; }
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+    if (error) { setErr(error.message); setLoading(false); return; }
+    // save to customers table
+    await fetch("https://azelftspngjhmqrjtxby.supabase.co/rest/v1/customers", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc", 'Authorization': "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc", 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name, email })
+    });
+    setMsg('Check your email to confirm your account, then come back to sign in.');
+    setLoading(false);
+  }
+
+  async function handleMagic() {
+    setErr(''); setLoading(true);
+    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: 'https://latebloomers.london/customer.html' } });
+    if (error) { setErr(error.message); setLoading(false); return; }
+    setMsg('Check your inbox — we sent you a magic link to sign in.');
+    setLoading(false);
+  }
+
+  return (
+    <div style={s.loginWrap}>
+      <div style={s.loginBox}>
+        <img src={LOGO} alt="Late Bloomers" style={{ width: 72, display: 'block', margin: '0 auto 20px' }} />
+        <div style={{ fontSize: 28, fontWeight: 1000, color: c.green, textAlign: 'center', letterSpacing: '-.04em', textTransform: 'uppercase', marginBottom: 4 }}>
+          {mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Join the garden' : 'Magic link'}
+        </div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: c.muted, textAlign: 'center', marginBottom: 24 }}>
+          {mode === 'login' ? 'Sign in to your Late Bloomers account' : mode === 'signup' ? 'Create your account — it\'s free' : 'We\'ll email you a one-click sign-in link'}
+        </div>
+
+        {msg && <div style={{ background: c.green, color: c.cream, padding: '14px 16px', fontWeight: 800, fontSize: 14, lineHeight: 1.5, marginBottom: 16 }}>{msg}</div>}
+        {err && <div style={{ background: '#fde8e8', color: '#c0392b', padding: '12px 14px', fontWeight: 700, fontSize: 13, marginBottom: 12 }}>{err}</div>}
+
+        {!msg && (
+          <>
+            {mode === 'signup' && (
+              <input style={s.inp} type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} />
+            )}
+            <input style={s.inp} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
+            {mode !== 'magic' && (
+              <input style={{ ...s.inp, marginBottom: 20 }} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && (mode === 'login' ? handleLogin() : handleSignup())} />
+            )}
+            <button style={{ ...s.btn('green'), width: '100%', padding: 14, fontSize: 15, marginBottom: 16 }}
+              onClick={mode === 'login' ? handleLogin : mode === 'signup' ? handleSignup : handleMagic}
+              disabled={loading}>
+              {loading ? 'One sec...' : mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send magic link'}
+            </button>
+          </>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+          {mode !== 'login'   && <button style={{ background: 'none', border: 'none', color: c.mid, fontWeight: 700, fontSize: 13, cursor: 'pointer' }} onClick={() => { setMode('login'); setErr(''); setMsg(''); }}>Already have an account? Sign in</button>}
+          {mode !== 'signup'  && <button style={{ background: 'none', border: 'none', color: c.mid, fontWeight: 700, fontSize: 13, cursor: 'pointer' }} onClick={() => { setMode('signup'); setErr(''); setMsg(''); }}>No account yet? Join the garden</button>}
+          {mode !== 'magic'   && <button style={{ background: 'none', border: 'none', color: c.muted, fontWeight: 700, fontSize: 12, cursor: 'pointer' }} onClick={() => { setMode('magic'); setErr(''); setMsg(''); }}>Forgot password? Use a magic link instead</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MY GARDEN (favourites) ──
+function GardenTab({ session }) {
+  const [favourites, setFavourites] = React.useState([]);
+  const [loading, setLoading]       = React.useState(true);
+
+  React.useEffect(() => { loadFavourites(); }, []);
+
+  async function loadFavourites() {
+    setLoading(true);
+    try {
+      const { data, error } = await sb.from('favourites').select('*').eq('customer_email', session.user.email);
+      if (error) { console.error('favourites error', error.message); setLoading(false); return; }
+      // fetch florist details separately
+      const enriched = await Promise.all((data || []).map(async fav => {
+        const { data: florist } = await sb.from('florists').select('shop_name, area, postcode, photo_url').eq('id', fav.florist_id).single();
+        return { ...fav, florists: florist };
+      }));
+      setFavourites(enriched);
+    } catch(e) { console.error('favourites error', e); }
+    setLoading(false);
+  }
+
+  async function removeFavourite(id) {
+    await sb.from('favourites').delete().eq('id', id);
+    setFavourites(f => f.filter(x => x.id !== id));
+  }
+
+  if (loading) return <div style={s.empty}>Tending your garden...</div>;
+
+  return (
+    <div>
+      <div style={s.title}>My Garden</div>
+      <div style={s.sub}>Your favourite florists, all in one place.</div>
+      {favourites.length === 0 && (
+        <div style={s.empty}>
+          <div style={s.emptyIcon}>🌱</div>
+          <div>Your garden is empty.</div>
+          <div style={{ fontSize: 13, marginTop: 8, color: c.muted }}>Browse florists on the app and save your favourites here.</div>
+          <a href="/index.html" style={{ ...s.btn('green'), display: 'inline-block', marginTop: 20, textDecoration: 'none' }}>Browse florists</a>
+        </div>
+      )}
+      {favourites.map(f => (
+        <div key={f.id} style={s.card}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <div style={{ width: 64, height: 64, border: `2px solid ${c.green}`, overflow: 'hidden', flexShrink: 0, background: c.cream2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+              {f.florists?.photo_url ? <img src={f.florists.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🌸'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 900, fontSize: 18, color: c.green, letterSpacing: '-.03em', textTransform: 'uppercase' }}>{f.florists?.shop_name || 'Florist'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: c.muted }}>📍 {f.florists?.area || f.florists?.postcode || 'London'}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <a href="/index.html#browse" style={{ ...s.btn('yellow'), textDecoration: 'none', fontSize: 12 }}>See listings</a>
+              <button style={{ ...s.btn(null), fontSize: 12 }} onClick={() => removeFavourite(f.id)}>Remove</button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── ORDERS ──
+function OrdersTab({ session }) {
+  const [orders, setOrders]   = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => { load(); }, []);
+
+  async function load() {
+    setLoading(true);
+    const { data } = await sb.from('orders').select('*').eq('customer_email', session.user.email).order('created_at', { ascending: false });
+    setOrders(data || []);
+    setLoading(false);
+  }
+
+  const statusColour = (s) => s === 'ready' ? 'green' : s === 'collected' ? 'yellow' : s === 'cancelled' ? 'red' : null;
+  const statusLabel  = (s) => s === 'ready' ? 'Ready to collect' : s === 'collected' ? 'Collected' : s === 'cancelled' ? 'Cancelled' : s === 'pending' ? 'Pending' : s;
+
+  if (loading) return <div style={s.empty}>Digging up your orders...</div>;
+
+  return (
+    <div>
+      <div style={s.title}>My Orders</div>
+      <div style={s.sub}>Every bunch you've rescued. Every stem that didn't go to waste.</div>
+      {orders.length === 0 && (
+        <div style={s.empty}>
+          <div style={s.emptyIcon}>🛍️</div>
+          <div>No orders yet.</div>
+          <div style={{ fontSize: 13, marginTop: 8 }}>Your first rescued bunch is out there waiting for you.</div>
+          <a href="/index.html" style={{ ...s.btn('green'), display: 'inline-block', marginTop: 20, textDecoration: 'none' }}>Find flowers</a>
+        </div>
+      )}
+      {orders.map(o => (
+        <div key={o.id} style={s.card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 17, color: c.green, letterSpacing: '-.02em', marginBottom: 4 }}>{o.bundle_name || 'Rescued bunch'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: c.muted, marginBottom: 8 }}>{o.shop_name} · {o.created_at?.slice(0,10)}</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={s.chip(statusColour(o.status))}>{statusLabel(o.status)}</span>
+                {o.original_price && <span style={{ fontSize: 13, fontWeight: 700, color: c.muted, textDecoration: 'line-through' }}>£{o.original_price}</span>}
+                <span style={{ fontSize: 16, fontWeight: 900, color: c.green }}>£{o.total || o.price}</span>
+              </div>
+            </div>
+            {o.collect_by && (
+              <div style={{ background: c.yellow, border: `2px solid ${c.green}`, padding: '10px 14px', textAlign: 'center', boxShadow: '3px 3px 0 rgba(15,77,30,.15)' }}>
+                <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.06em', color: c.green }}>Collect by</div>
+                <div style={{ fontSize: 22, fontWeight: 1000, color: c.green, letterSpacing: '-.04em' }}>{o.collect_by}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── ACCOUNT ──
+function AccountTab({ session }) {
+  const [name, setName]           = React.useState(session.user.user_metadata?.name || '');
+  const [saving, setSaving]       = React.useState(false);
+  const [saved, setSaved]         = React.useState(false);
+  const [changingPw, setChangingPw] = React.useState(false);
+  const [newPw, setNewPw]         = React.useState('');
+  const [confirmPw, setConfirmPw] = React.useState('');
+  const [pwErr, setPwErr]         = React.useState('');
+  const [pwOk, setPwOk]           = React.useState(false);
+
+  async function saveName() {
+    setSaving(true);
+    await sb.auth.updateUser({ data: { name } });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    setSaving(false);
+  }
+
+  async function changePassword() {
+    setPwErr('');
+    if (newPw !== confirmPw) { setPwErr('Passwords do not match.'); return; }
+    if (newPw.length < 8) { setPwErr('At least 8 characters please.'); return; }
+    const { error } = await sb.auth.updateUser({ password: newPw });
+    if (error) { setPwErr('Could not update password.'); return; }
+    setPwOk(true); setNewPw(''); setConfirmPw('');
+    setTimeout(() => { setChangingPw(false); setPwOk(false); }, 2000);
+  }
+
+  return (
+    <div>
+      <div style={s.title}>My Account</div>
+      <div style={s.sub}>The details behind the blooms.</div>
+
+      <div style={s.card}>
+        <div style={{ fontWeight: 900, color: c.green, marginBottom: 16, fontSize: 16, textTransform: 'uppercase', letterSpacing: '.04em' }}>Your details</div>
+        <div style={{ fontSize: 12, fontWeight: 900, color: c.muted, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Name</div>
+        <input style={{ ...s.inp, marginBottom: 14 }} type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+        <div style={{ fontSize: 12, fontWeight: 900, color: c.muted, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Email</div>
+        <div style={{ padding: '13px 14px', background: c.cream2, border: `1.5px solid ${c.cream2}`, fontSize: 15, fontWeight: 700, color: c.muted, marginBottom: 20 }}>{session.user.email}</div>
+        <button style={s.btn('green')} onClick={saveName} disabled={saving}>{saved ? 'Saved!' : saving ? 'Saving...' : 'Save changes'}</button>
+      </div>
+
+      <div style={s.card}>
+        <div style={{ fontWeight: 900, color: c.green, marginBottom: 8, fontSize: 16, textTransform: 'uppercase', letterSpacing: '.04em' }}>Password</div>
+        {!changingPw && <button style={s.btn(null)} onClick={() => setChangingPw(true)}>Change password</button>}
+        {changingPw && (
+          <div>
+            <input style={s.inp} type="password" placeholder="New password" value={newPw} onChange={e => setNewPw(e.target.value)} />
+            <input style={{ ...s.inp, marginBottom: 16 }} type="password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
+            {pwErr && <div style={{ color: '#c0392b', fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{pwErr}</div>}
+            {pwOk  && <div style={{ color: c.mid, fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Password updated!</div>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={s.btn('green')} onClick={changePassword}>Update password</button>
+              <button style={s.btn(null)} onClick={() => { setChangingPw(false); setPwErr(''); }}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── APP ──
+function App() {
+  const [session, setSession] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [tab, setTab]         = React.useState('garden');
+
+  React.useEffect(() => {
+    // if arriving from the sign in link, clear any existing session first
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('signout') === '1') {
+      sb.auth.signOut().then(() => {
+        window.history.replaceState({}, '', window.location.pathname);
+        setSession(null);
+        setLoading(false);
+      });
+      return;
+    }
+    sb.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false); });
+    const { data: { subscription } } = sb.auth.onAuthStateChange((_e, session) => setSession(session));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.muted, fontWeight: 700 }}>Watering the plants...</div>;
+  if (!session) return <LoginScreen />;
+
+  const name = session.user.user_metadata?.name || session.user.email.split('@')[0];
+
+  const nav = [
+    { key: 'garden',  label: 'My Garden',  icon: '🌱' },
+    { key: 'orders',  label: 'My Orders',  icon: '🛍️' },
+    { key: 'account', label: 'My Account', icon: '🌿' },
+  ];
+
+  return (
+    <div style={s.page}>
+      <nav style={s.nav}>
+        <a href="/index.html" style={{ ...s.logo, textDecoration: 'none' }}>
+          <img src={LOGO} alt="Late Bloomers" style={{ height: 38, width: 'auto' }} />
+          <span style={s.logoTxt}>LateBloomers</span>
+        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span style={s.navName}>Hey, {name} 🌸</span>
+          <button style={s.navOut} onClick={() => sb.auth.signOut()}>Sign out</button>
+        </div>
+      </nav>
+
+      <div style={s.tabs}>
+        {nav.map(n => (
+          <button key={n.key} style={s.tab(tab === n.key)} onClick={() => setTab(n.key)}>
+            {n.icon} {n.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={s.main}>
+        {tab === 'garden'  && <GardenTab  session={session} />}
+        {tab === 'orders'  && <OrdersTab  session={session} />}
+        {tab === 'account' && <AccountTab session={session} />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
