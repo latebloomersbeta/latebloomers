@@ -1045,25 +1045,14 @@
     }
   }
 
-  const EMAILJS_PUBLIC_KEY  = "knXNauvd_ARxehmre";
-  const EMAILJS_SERVICE_ID  = "late-bloomers";
-  const EMAILJS_TEMPLATE_ID = "template_c09qtsh";
+  const GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznOMEgUziPA4iSnnuofTfUNd3xi2i-K2_ReDEtpboJQdb8liMm9hc-NUuBikZPgUhvaA/exec";
 
   async function sendCustomerEmail(name, email) {
     try {
-      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      await fetch(GMAIL_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_id:  EMAILJS_SERVICE_ID,
-          template_id: EMAILJS_TEMPLATE_ID,
-          user_id:     EMAILJS_PUBLIC_KEY,
-          template_params: {
-            to_name:  name,
-            to_email: email,
-            email:    email
-          }
-        })
+        body: JSON.stringify({ to_name: name, to_email: email })
       });
     } catch(e) { console.error("Email failed", e); }
   }
