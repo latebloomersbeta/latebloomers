@@ -1045,12 +1045,13 @@
     }
   }
 
-  const GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznOMEgUziPA4iSnnuofTfUNd3xi2i-K2_ReDEtpboJQdb8liMm9hc-NUuBikZPgUhvaA/exec";
+  const GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5zzJZUyLH9aoESabiYbZqvhiRhTGOg7FHcPX5K_7bWlRxYMuSUaCeipGIXD8R_B7B/exec";
 
   async function sendCustomerEmail(name, email) {
     try {
       await fetch(GMAIL_SCRIPT_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to_name: name, to_email: email })
       });
