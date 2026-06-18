@@ -1047,7 +1047,7 @@
 
   const EMAILJS_PUBLIC_KEY  = "knXNauvd_ARxehmre";
   const EMAILJS_SERVICE_ID  = "late-bloomers";
-  const EMAILJS_TEMPLATE_ID = "template_ao3l80e";
+  const EMAILJS_TEMPLATE_ID = "template_c09qtsh";
 
   async function sendCustomerEmail(name, email) {
     try {
@@ -1060,6 +1060,7 @@
           user_id:     EMAILJS_PUBLIC_KEY,
           template_params: {
             to_name:  name,
+            to_email: email,
             email:    email
           }
         })
