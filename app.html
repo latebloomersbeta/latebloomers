@@ -105,6 +105,42 @@
       transform: rotate(-1deg);
     }
 
+    .burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .burger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--green);
+      border-radius: 2px;
+    }
+
+    .mobile-nav {
+      display: none;
+      flex-direction: column;
+      background: rgba(251,246,234,.98);
+      border-top: 1px solid rgba(15,77,30,.12);
+      padding: 8px 0;
+    }
+    .mobile-nav a {
+      display: block;
+      padding: 13px 22px;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--green);
+      border-bottom: 1px solid rgba(15,77,30,.07);
+      text-decoration: none;
+    }
+    .mobile-nav a:last-child { border-bottom: none; }
+    .mobile-nav.open { display: flex; }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -664,6 +700,7 @@
       .steps, .drop-grid { grid-template-columns: 1fr 1fr; }
       .audiences { grid-template-columns: 1fr; }
       .nav-links { display: none; }
+      .burger { display: flex; }
     }
     @media (max-width: 580px) {
       .nav { padding: 14px; }
@@ -703,8 +740,20 @@
       <a href="florist.html" style="color: var(--muted);">Florist login</a>
       <a href="game.html" style="color: var(--muted); font-weight: 800; font-size: 14px;">Procrastinate? 💐</a>
     </nav>
+    <button class="burger" onclick="toggleMenu()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
     <a class="btn" href="#waitlist">Join waitlist</a>
   </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="#how" onclick="toggleMenu()">How it works</a>
+    <a href="#browse" onclick="toggleMenu()">Browse</a>
+    <a href="story.html">Our story</a>
+    <a href="for-florists.html">For florists</a>
+    <a href="customer.html?login=1" style="color: var(--yellow);" id="mob-signin">Sign in</a>
+    <a href="florist.html" style="color: var(--muted);">Florist login</a>
+    <a href="game.html" style="color: var(--muted);">Procrastinate? 💐</a>
+  </nav>
 </header>
 
 <main id="top">
@@ -942,6 +991,10 @@
 </footer>
 
 <script>
+  function toggleMenu() {
+    document.getElementById('mobile-nav').classList.toggle('open');
+  }
+
   const SUPABASE_URL = "https://azelftspngjhmqrjtxby.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc";
 
@@ -1217,6 +1270,8 @@
       if (session && session.user && session.user.email) {
         const btn = document.getElementById('nav-signin');
         if (btn) { btn.textContent = 'My account'; btn.href = 'customer.html'; }
+        const mob = document.getElementById('mob-signin');
+        if (mob) { mob.textContent = 'My account'; mob.href = 'customer.html'; }
       }
     } catch(e) {}
   })();
