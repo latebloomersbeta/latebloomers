@@ -1045,7 +1045,8 @@
     }
   }
 
-  const GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxWBZ3kVEvxG3ITzRHNptnAlILyp5XnHzHy1oAV0HdbsGeHloJ5vcRgL0QGiITxk1GnQ/exec";
+  const GMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDuoVeloDE6DTVHgP-fsrTQ1kM8MnOlV8xdiukf-r4w5qC3FT6v1m0KPPgzCb2BE3rbQ/exec";
+  const FLORIST_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_EQujeKjasvlkfGKClszuQWTBBtVCcTPZcFVFkYd8euecGAUA1Vkd1uF3uBolHeKRzA/exec";
 
   async function sendCustomerEmail(name, email) {
     try {
@@ -1056,6 +1057,17 @@
         body: JSON.stringify({ to_name: name, to_email: email })
       });
     } catch(e) { console.error("Email failed", e); }
+  }
+
+  async function sendFloristEmail(name, email) {
+    try {
+      await fetch(FLORIST_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to_name: name, to_email: email })
+      });
+    } catch(e) { console.error("Florist email failed", e); }
   }
 
   // ── Form submit ──
@@ -1095,9 +1107,10 @@
 
       if (res.ok) {
         if (!isFlorist) sendCustomerEmail(name, email);
+        if (isFlorist) sendFloristEmail(name, email);
         const msg = isFlorist
-          ? 'Lovely! We will be in touch soon about getting your shop listed on Late Bloomers.'
-          : 'You are on the list! We will let you know when Late Bloomers launches near you.';
+          ? '🌿 Lovely! We will be in touch soon about getting your shop listed on Late Bloomers.'
+          : '🌸 You are on the list! We will let you know when Late Bloomers launches near you.';
         document.getElementById('success-msg').textContent = msg;
         document.getElementById('success-msg').classList.add('visible');
         document.getElementById('form-wrap').style.display = 'none';
