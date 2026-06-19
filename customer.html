@@ -8,6 +8,24 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #fbf6ea; min-height: 100vh; color: #151515; }
     button, input { font-family: inherit; }
+
+    .mobile-nav-drawer {
+      display: none;
+      flex-direction: column;
+      background: #0a3414;
+      padding: 8px 0;
+    }
+    .mobile-nav-drawer a {
+      display: block;
+      padding: 13px 22px;
+      font-weight: 800;
+      font-size: 15px;
+      color: #fbf6ea;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-decoration: none;
+    }
+    .mobile-nav-drawer a:last-child { border-bottom: none; }
+    .mobile-nav-drawer.open { display: flex; }
   </style>
 </head>
 <body>
@@ -28,7 +46,6 @@ var white  = "#ffffff";
 
 var session = null;
 
-// ── HELPERS ──
 function h(tag, attrs, children) {
   var el = document.createElement(tag);
   if (attrs) Object.keys(attrs).forEach(function(k) {
@@ -65,10 +82,29 @@ async function api(path, opts) {
   return res;
 }
 
-// ── NAV ──
+function toggleMobileNav() {
+  var drawer = document.getElementById("mobile-nav-drawer");
+  if (drawer) drawer.classList.toggle("open");
+}
+
 function makeNav(name) {
-  return h("div", { style: { background: green, padding: "0 24px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, [
-    h("a", { href: "/app.html", style: { display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" } }, [
+  var burger = document.createElement("button");
+  burger.setAttribute("aria-label", "Open menu");
+  burger.style.cssText = "background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:5px;";
+  ["","",""].forEach(function() {
+    var s = document.createElement("span");
+    s.style.cssText = "display:block;width:24px;height:2px;background:#ffd21f;border-radius:2px;";
+    burger.appendChild(s);
+  });
+  burger.onclick = toggleMobileNav;
+
+  var drawer = document.createElement("nav");
+  drawer.id = "mobile-nav-drawer";
+  drawer.className = "mobile-nav-drawer";
+  drawer.innerHTML = '<a href="app.html">Find flowers</a><a href="story.html">Our story</a><a href="for-florists.html">For florists</a><a href="florist.html" style="color:rgba(255,255,255,.5)">Florist login</a>';
+
+  var navBar = h("div", { style: { background: green, padding: "0 24px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, [
+    h("a", { href: "app.html", style: { display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" } }, [
       h("img", { src: LOGO, alt: "Late Bloomers", style: { height: "38px" } }),
       h("span", { style: { color: yellow, fontWeight: "900", fontSize: "17px" } }, "LateBloomers")
     ]),
@@ -77,12 +113,17 @@ function makeNav(name) {
       h("button", {
         style: { background: "transparent", border: "1.5px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", padding: "7px 14px", fontSize: "12px", fontWeight: "700", cursor: "pointer" },
         onclick: function() { signOut(); }
-      }, "Sign out")
+      }, "Sign out"),
+      burger
     ])
   ]);
+
+  var wrapper = document.createElement("div");
+  wrapper.appendChild(navBar);
+  wrapper.appendChild(drawer);
+  return wrapper;
 }
 
-// ── TABS ──
 function makeTabs(active) {
   var tabs = [
     { key: "garden",  label: "🌱 My Garden"  },
@@ -103,14 +144,12 @@ function wrap(content) {
   return h("div", { style: { maxWidth: "900px", margin: "0 auto", padding: "36px 24px", minHeight: "400px" } }, content);
 }
 
-// ── SIGN OUT ──
 async function signOut() {
   await api("/auth/v1/logout", { method: "POST" });
   session = null;
   showLogin();
 }
 
-// ── LOGIN ──
 function showLogin(mode) {
   mode = mode || "login";
   var emailEl, passwordEl, nameEl;
@@ -179,7 +218,6 @@ function showLogin(mode) {
         body: JSON.stringify({ email: email, redirect_to: "https://latebloomers.london/customer.html" })
       });
       var resData = await res.json().catch(function() { return {}; });
-      console.log("magic link response", res.status, resData);
       if (!res.ok) { showErr("Error " + res.status + ": " + (resData.msg || resData.error_description || JSON.stringify(resData))); return; }
       showMsg("Check your inbox - we sent you a magic link.");
     }
@@ -212,7 +250,6 @@ function showLogin(mode) {
   render(h("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" } }, box));
 }
 
-// ── GARDEN ──
 async function showGarden() {
   var name = session.user && session.user.user_metadata && session.user.user_metadata.name ? session.user.user_metadata.name : session.user.email.split("@")[0];
   var nav  = makeNav(name);
@@ -229,7 +266,7 @@ async function showGarden() {
       h("div", { style: { fontSize: "36px", marginBottom: "12px" } }, "🌱"),
       h("div", { style: { fontWeight: "700", color: green } }, "Your garden is empty."),
       h("div", { style: { fontSize: "13px", color: muted, marginTop: "8px" } }, "Browse florists and save your favourites."),
-      h("a",   { href: "/app.html", style: { display: "inline-block", marginTop: "20px", padding: "10px 20px", background: green, color: white, fontWeight: "700", textDecoration: "none" } }, "Browse florists")
+      h("a",   { href: "app.html", style: { display: "inline-block", marginTop: "20px", padding: "10px 20px", background: green, color: white, fontWeight: "700", textDecoration: "none" } }, "Browse florists")
     ]);
   } else {
     inner = h("div", {}, favs.map(function(f) {
@@ -255,15 +292,12 @@ async function showGarden() {
     inner
   ]);
 
-  render(h("div", {}, [nav, tabs, wrap(title)]));
+  render(h("div", {}, [makeNav(name), makeTabs("garden"), wrap(title)]));
 }
 
-// ── ORDERS ──
 async function showOrders() {
   var name = session.user && session.user.user_metadata && session.user.user_metadata.name ? session.user.user_metadata.name : session.user.email.split("@")[0];
-  var nav  = makeNav(name);
-  var tabs = makeTabs("orders");
-  render(h("div", {}, [nav, tabs, wrap(h("div", { style: { color: muted, padding: "40px" } }, "Digging up your orders..."))]));
+  render(h("div", {}, [makeNav(name), makeTabs("orders"), wrap(h("div", { style: { color: muted, padding: "40px" } }, "Digging up your orders..."))]));
 
   var res    = await api("/rest/v1/orders?customer_email=eq." + encodeURIComponent(session.user.email) + "&order=created_at.desc");
   var orders = res.ok ? await res.json() : [];
@@ -274,7 +308,7 @@ async function showOrders() {
       h("div", { style: { fontSize: "36px", marginBottom: "12px" } }, "🛍️"),
       h("div", { style: { fontWeight: "700", color: green } }, "No orders yet."),
       h("div", { style: { fontSize: "13px", color: muted, marginTop: "8px" } }, "Your first rescued bunch is out there waiting."),
-      h("a",   { href: "/app.html", style: { display: "inline-block", marginTop: "20px", padding: "10px 20px", background: green, color: white, fontWeight: "700", textDecoration: "none" } }, "Find flowers")
+      h("a",   { href: "app.html", style: { display: "inline-block", marginTop: "20px", padding: "10px 20px", background: green, color: white, fontWeight: "700", textDecoration: "none" } }, "Find flowers")
     ]);
   } else {
     inner = h("div", {}, orders.map(function(o) {
@@ -295,14 +329,12 @@ async function showOrders() {
     inner
   ]);
 
-  render(h("div", {}, [nav, tabs, wrap(title)]));
+  render(h("div", {}, [makeNav(name), makeTabs("orders"), wrap(title)]));
 }
 
-// ── ACCOUNT ──
 function showAccount() {
   var name = session.user && session.user.user_metadata && session.user.user_metadata.name ? session.user.user_metadata.name : "";
   var nav  = makeNav(name || session.user.email.split("@")[0]);
-  var tabs = makeTabs("account");
 
   var inpStyle  = { width: "100%", padding: "11px 14px", border: "2px solid #EDE6D6", background: "#fffdf7", fontSize: "14px", fontWeight: "700", outline: "none", marginBottom: "14px" };
   var cardStyle = { background: white, border: "2px solid " + green, padding: "24px", marginBottom: "14px", boxShadow: "4px 4px 0 rgba(15,77,30,.12)" };
@@ -370,21 +402,17 @@ function showAccount() {
     ])
   ]);
 
-  render(h("div", {}, [nav, tabs, wrap(content)]));
+  render(h("div", {}, [makeNav(name || session.user.email.split("@")[0]), makeTabs("account"), wrap(content)]));
 }
 
-// ── ROUTER ──
 function showPortal(tab) {
   if (tab === "garden")  showGarden();
   else if (tab === "orders")  showOrders();
   else if (tab === "account") showAccount();
 }
 
-// ── INIT ──
 async function init() {
   var params = new URLSearchParams(window.location.search);
-
-  // check for magic link token in hash
   var hash = window.location.hash;
   if (hash && hash.indexOf("access_token") > -1) {
     var hashParams = new URLSearchParams(hash.substring(1));
@@ -404,13 +432,11 @@ async function init() {
     }
   }
 
-  // force login screen
   if (params.get("login") === "1") {
     showLogin("login");
     return;
   }
 
-  // check existing session via localStorage
   var stored = localStorage.getItem("sb-azelftspngjhmqrjtxby-auth-token");
   if (stored) {
     try {
