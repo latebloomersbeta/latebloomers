@@ -19,6 +19,54 @@
     .login-btn { width: 100%; padding: 13px; border-radius: 8px; border: none; background: #1B4D1E; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
     .login-err { color: #c0392b; font-size: 13px; margin-bottom: 10px; }
 
+    /* Mobile top bar */
+    .mobile-topbar {
+      display: none;
+      background: #1B4D1E;
+      padding: 0 16px;
+      height: 56px;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .mobile-topbar img { height: 36px; }
+    .mobile-burger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .mobile-burger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: #ffd21f;
+      border-radius: 2px;
+    }
+    .mobile-nav-drawer {
+      display: none;
+      flex-direction: column;
+      background: #0a3414;
+      position: sticky;
+      top: 56px;
+      z-index: 49;
+    }
+    .mobile-nav-drawer a {
+      display: block;
+      padding: 13px 20px;
+      font-weight: 800;
+      font-size: 14px;
+      color: #fbf6ea;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-decoration: none;
+    }
+    .mobile-nav-drawer.open { display: flex; }
+
     /* Dashboard */
     #dashboard { display: none; min-height: 100vh; }
     .dash-inner { display: flex; min-height: 100vh; }
@@ -73,6 +121,8 @@
 
     @media (max-width: 600px) {
       .sidebar { display: none; }
+      .mobile-topbar { display: flex; }
+      .main { padding: 20px 16px; }
       .price-grid { grid-template-columns: 1fr 1fr; }
       .two-col { grid-template-columns: 1fr; }
     }
@@ -95,6 +145,21 @@
 
 <!-- DASHBOARD -->
 <div id="dashboard">
+
+  <!-- Mobile top bar -->
+  <div class="mobile-topbar">
+    <img src="https://latebloomersbeta.github.io/latebloomers/logo.png" alt="Late Bloomers" />
+    <button class="mobile-burger" onclick="toggleMobileNav()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <nav class="mobile-nav-drawer" id="mobile-nav-drawer">
+    <a href="app.html">Find flowers</a>
+    <a href="story.html">Our story</a>
+    <a href="for-florists.html">For florists</a>
+    <a href="customer.html">Customer login</a>
+  </nav>
+
   <div class="dash-inner">
     <div class="sidebar">
       <div class="sidebar-logo">
@@ -240,6 +305,10 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let currentSession = null;
 let currentProfile = null;
 
+function toggleMobileNav() {
+  document.getElementById('mobile-nav-drawer').classList.toggle('open');
+}
+
 async function sbFetch(path, options = {}) {
   const headers = {
     'apikey': SUPABASE_KEY,
@@ -347,21 +416,13 @@ document.getElementById('login-btn').addEventListener('click', async () => {
   const password = document.getElementById('login-password').value;
   const errEl    = document.getElementById('login-err');
   const btn      = document.getElementById('login-btn');
-
   errEl.style.display = 'none';
   btn.textContent = 'Signing in...';
   btn.disabled = true;
-
   const { session, error } = await signIn(email, password);
   btn.textContent = 'Sign in';
   btn.disabled = false;
-
-  if (error) {
-    errEl.textContent = error;
-    errEl.style.display = 'block';
-    return;
-  }
-
+  if (error) { errEl.textContent = error; errEl.style.display = 'block'; return; }
   currentSession = session;
   await loadProfile(session.user.email);
   showDashboard();
@@ -382,10 +443,7 @@ async function loadListings() {
   el.innerHTML = '<div class="empty">Loading...</div>';
   const { data } = await sbFetch('/rest/v1/listings?florist_email=eq.' + encodeURIComponent(currentProfile.email) + '&order=created_at.desc');
   const listings = data || [];
-  if (listings.length === 0) {
-    el.innerHTML = '<div class="empty">No listings yet. Add your first one above.</div>';
-    return;
-  }
+  if (listings.length === 0) { el.innerHTML = '<div class="empty">No listings yet. Add your first one above.</div>'; return; }
   el.innerHTML = listings.map(l => `
     <div class="card" id="listing-${l.id}">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
@@ -411,11 +469,7 @@ async function loadListings() {
 }
 
 async function toggleListing(id, currentActive) {
-  await sbFetch('/rest/v1/listings?id=eq.' + id, {
-    method: 'PATCH',
-    headers: { 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ active: !currentActive })
-  });
+  await sbFetch('/rest/v1/listings?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ active: !currentActive }) });
   loadListings();
 }
 
@@ -444,47 +498,26 @@ document.querySelectorAll('.tier-btn').forEach(btn => {
 });
 
 document.getElementById('save-listing-btn').addEventListener('click', async () => {
-  const title    = document.getElementById('f-title').value.trim();
-  const desc     = document.getElementById('f-desc').value.trim();
+  const title     = document.getElementById('f-title').value.trim();
+  const desc      = document.getElementById('f-desc').value.trim();
   const origPrice = document.getElementById('f-original-price').value.trim();
-  const price    = document.getElementById('f-price').value.trim();
-  const qty      = document.getElementById('f-qty').value.trim();
-  const collect  = document.getElementById('f-collect').value.trim();
-  const type     = document.querySelector('input[name="type"]:checked')?.value || 'bouquet';
-
+  const price     = document.getElementById('f-price').value.trim();
+  const qty       = document.getElementById('f-qty').value.trim();
+  const collect   = document.getElementById('f-collect').value.trim();
+  const type      = document.querySelector('input[name="type"]:checked')?.value || 'bouquet';
   if (!title) { alert('Please add a bundle name.'); return; }
   if (!currentProfile?.email) { alert('Profile not loaded yet, please wait.'); return; }
-
   const btn = document.getElementById('save-listing-btn');
   btn.textContent = 'Saving...';
   btn.disabled = true;
-
   const { ok } = await sbFetch('/rest/v1/listings', {
     method: 'POST',
     headers: { 'Prefer': 'return=minimal' },
-    body: JSON.stringify({
-      name:           title,
-      title:          title,
-      description:    desc || null,
-      price:          price ? parseFloat(price) : null,
-      original_price: origPrice ? parseFloat(origPrice) : null,
-      quantity:       qty ? parseInt(qty) : null,
-      collect_by:     collect || null,
-      florist_email:  currentProfile.email,
-      florist_id:     currentProfile.id || null,
-      shop_name:      currentProfile.shop_name || '',
-      area:           currentProfile.area || currentProfile.postcode || '',
-      active:         false,
-      status:         'active',
-      type:           type,
-    })
+    body: JSON.stringify({ name: title, title, description: desc || null, price: price ? parseFloat(price) : null, original_price: origPrice ? parseFloat(origPrice) : null, quantity: qty ? parseInt(qty) : null, collect_by: collect || null, florist_email: currentProfile.email, florist_id: currentProfile.id || null, shop_name: currentProfile.shop_name || '', area: currentProfile.area || currentProfile.postcode || '', active: false, status: 'active', type })
   });
-
   btn.textContent = 'Add listing';
   btn.disabled = false;
-
   if (!ok) { alert('Could not save listing. Please try again.'); return; }
-
   document.getElementById('new-listing-form').style.display = 'none';
   document.getElementById('add-listing-btn').style.display = 'inline-block';
   clearListingForm();
@@ -507,10 +540,7 @@ async function loadOrders() {
   el.innerHTML = '<div class="empty">Loading...</div>';
   const { data } = await sbFetch('/rest/v1/orders?florist_email=eq.' + encodeURIComponent(currentProfile?.email || '') + '&order=created_at.desc');
   const orders = data || [];
-  if (orders.length === 0) {
-    el.innerHTML = '<div class="empty">No orders yet. They will appear here once customers start buying.</div>';
-    return;
-  }
+  if (orders.length === 0) { el.innerHTML = '<div class="empty">No orders yet. They will appear here once customers start buying.</div>'; return; }
   el.innerHTML = orders.map(o => `
     <div class="card">
       <div style="font-weight:700; color:#1B4D1E; margin-bottom:4px;">${o.bundle_name || 'Order'}</div>
@@ -519,131 +549,67 @@ async function loadOrders() {
   `).join('');
 }
 
-document.getElementById('photo-uploader').addEventListener('click', () => {
-  document.getElementById('photo-input').click();
-});
+document.getElementById('photo-uploader').addEventListener('click', () => { document.getElementById('photo-input').click(); });
 
 document.getElementById('photo-input').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
   const placeholder = document.getElementById('photo-placeholder');
   placeholder.innerHTML = '<div style="font-size:13px; color:#5A5A5A; font-weight:600;">Uploading...</div>';
-
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const ext = file.name.split('.').pop();
-    const userId = currentSession?.user?.id || 'unknown';
-    const path = `shop-photos/${userId}-${Date.now()}.${ext}`;
-
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/florist-assets/${path}`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + currentSession.access_token,
-        'Content-Type': file.type,
-        'x-upsert': 'true'
-      },
-      body: file
-    });
-
-    if (!res.ok) {
-      alert('Photo upload failed. Please try again.');
-      placeholder.innerHTML = '<div style="font-size:32px; margin-bottom:8px;">📷</div><div style="font-size:13px; color:#5A5A5A; font-weight:600;">Upload photo</div><div style="font-size:11px; color:#b4b2a9; margin-top:4px;">JPG or PNG</div>';
-      return;
-    }
-
-    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/florist-assets/${path}`;
-
-    await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ photo_url: publicUrl })
-    });
-
-    currentProfile.photo_url = publicUrl;
-    document.getElementById('photo-preview').src = publicUrl;
-    document.getElementById('photo-preview').style.display = 'block';
-    placeholder.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+  const ext = file.name.split('.').pop();
+  const userId = currentSession?.user?.id || 'unknown';
+  const path = `shop-photos/${userId}-${Date.now()}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/florist-assets/${path}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentSession.access_token, 'Content-Type': file.type, 'x-upsert': 'true' },
+    body: file
+  });
+  if (!res.ok) { alert('Photo upload failed. Please try again.'); placeholder.innerHTML = '<div style="font-size:32px; margin-bottom:8px;">📷</div><div style="font-size:13px; color:#5A5A5A; font-weight:600;">Upload photo</div><div style="font-size:11px; color:#b4b2a9; margin-top:4px;">JPG or PNG</div>'; return; }
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/florist-assets/${path}`;
+  await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ photo_url: publicUrl }) });
+  currentProfile.photo_url = publicUrl;
+  document.getElementById('photo-preview').src = publicUrl;
+  document.getElementById('photo-preview').style.display = 'block';
+  placeholder.style.display = 'none';
 });
 
 document.getElementById('save-shop-btn').addEventListener('click', async () => {
-  const btn  = document.getElementById('save-shop-btn');
+  const btn = document.getElementById('save-shop-btn');
   const okEl = document.getElementById('save-shop-ok');
   btn.textContent = 'Saving...';
   btn.disabled = true;
-
-  const updates = {
-    shop_name: document.getElementById('shop-name').value.trim(),
-    area:      document.getElementById('shop-area').value.trim(),
-    postcode:  document.getElementById('shop-postcode').value.trim(),
-    phone:     document.getElementById('shop-phone').value.trim() || null,
-    bio:       document.getElementById('shop-bio').value.trim(),
-  };
-
-  await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), {
-    method: 'PATCH',
-    headers: { 'Prefer': 'return=minimal' },
-    body: JSON.stringify(updates)
-  });
-
+  const updates = { shop_name: document.getElementById('shop-name').value.trim(), area: document.getElementById('shop-area').value.trim(), postcode: document.getElementById('shop-postcode').value.trim(), phone: document.getElementById('shop-phone').value.trim() || null, bio: document.getElementById('shop-bio').value.trim() };
+  await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(updates) });
   Object.assign(currentProfile, updates);
   document.getElementById('sidebar-shop-name').textContent = updates.shop_name || currentSession.user.email;
-
   btn.textContent = 'Save changes';
   btn.disabled = false;
   okEl.style.display = 'inline';
   setTimeout(() => { okEl.style.display = 'none'; }, 2000);
 });
 
-document.getElementById('show-pw-btn').addEventListener('click', () => {
-  document.getElementById('pw-form').style.display = 'block';
-  document.getElementById('show-pw-btn').style.display = 'none';
-});
-
-document.getElementById('cancel-pw-btn').addEventListener('click', () => {
-  document.getElementById('pw-form').style.display = 'none';
-  document.getElementById('show-pw-btn').style.display = 'inline-block';
-  document.getElementById('pw-err').style.display = 'none';
-  document.getElementById('new-pw').value = '';
-  document.getElementById('confirm-pw').value = '';
-});
-
+document.getElementById('show-pw-btn').addEventListener('click', () => { document.getElementById('pw-form').style.display = 'block'; document.getElementById('show-pw-btn').style.display = 'none'; });
+document.getElementById('cancel-pw-btn').addEventListener('click', () => { document.getElementById('pw-form').style.display = 'none'; document.getElementById('show-pw-btn').style.display = 'inline-block'; document.getElementById('pw-err').style.display = 'none'; document.getElementById('new-pw').value = ''; document.getElementById('confirm-pw').value = ''; });
 document.getElementById('save-pw-btn').addEventListener('click', async () => {
-  const newPw     = document.getElementById('new-pw').value;
+  const newPw = document.getElementById('new-pw').value;
   const confirmPw = document.getElementById('confirm-pw').value;
-  const errEl     = document.getElementById('pw-err');
-  const okEl      = document.getElementById('pw-ok');
-  errEl.style.display = 'none';
-  okEl.style.display = 'none';
-
+  const errEl = document.getElementById('pw-err');
+  const okEl = document.getElementById('pw-ok');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
   if (newPw !== confirmPw) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
-  if (newPw.length < 8)   { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
-
+  if (newPw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
   const ok = await updatePassword(newPw);
   if (!ok) { errEl.textContent = 'Could not update password. Try again.'; errEl.style.display = 'block'; return; }
-
   okEl.style.display = 'block';
   document.getElementById('new-pw').value = '';
   document.getElementById('confirm-pw').value = '';
-  setTimeout(() => {
-    document.getElementById('pw-form').style.display = 'none';
-    document.getElementById('show-pw-btn').style.display = 'inline-block';
-    okEl.style.display = 'none';
-  }, 2000);
+  setTimeout(() => { document.getElementById('pw-form').style.display = 'none'; document.getElementById('show-pw-btn').style.display = 'inline-block'; okEl.style.display = 'none'; }, 2000);
 });
 
 async function init() {
   const session = await getSession();
-  if (session) {
-    currentSession = session;
-    await loadProfile(session.user?.email || session.email);
-    showDashboard();
-  } else {
-    showLogin();
-  }
+  if (session) { currentSession = session; await loadProfile(session.user?.email || session.email); showDashboard(); }
+  else { showLogin(); }
 }
 
 init();
