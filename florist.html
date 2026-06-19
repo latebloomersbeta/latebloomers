@@ -4,522 +4,673 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Late Bloomers — Florist dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f5f0; color: #1a1a1a; min-height: 100vh; }
     input, textarea, select, button { font-family: inherit; }
-    #root { min-height: 100vh; }
+
+    /* Login */
+    #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F5F0E8; }
+    .login-box { background: #fff; border-radius: 16px; padding: 40px; width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .login-box img { width: 80px; display: block; margin: 0 auto 20px; }
+    .login-title { font-size: 20px; font-weight: 800; color: #1B4D1E; text-align: center; margin-bottom: 4px; }
+    .login-sub { font-size: 13px; color: #5A5A5A; text-align: center; margin-bottom: 24px; }
+    .login-input { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #EDE6D6; font-size: 14px; outline: none; margin-bottom: 12px; display: block; }
+    .login-btn { width: 100%; padding: 13px; border-radius: 8px; border: none; background: #1B4D1E; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .login-err { color: #c0392b; font-size: 13px; margin-bottom: 10px; }
+
+    /* Dashboard */
+    #dashboard { display: none; min-height: 100vh; }
+    .dash-inner { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: #1B4D1E; display: flex; flex-direction: column; padding: 24px 0; min-height: 100vh; position: sticky; top: 0; flex-shrink: 0; }
+    .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.12); margin-bottom: 12px; }
+    .sidebar-logo img { width: 48px; margin-bottom: 8px; }
+    .sidebar-name { color: #ffd21f; font-weight: 900; font-size: 15px; }
+    .sidebar-sub { color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 2px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; cursor: pointer; color: rgba(255,255,255,0.65); font-weight: 500; font-size: 14px; border-left: 3px solid transparent; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 700; border-left-color: #ffd21f; }
+    .sidebar-foot { padding: 12px 20px; color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer; margin-top: auto; }
+    .main { flex: 1; padding: 32px; max-width: 800px; }
+    .page-title { font-size: 22px; font-weight: 800; color: #1B4D1E; margin-bottom: 20px; }
+
+    /* Cards */
+    .card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #EDE6D6; margin-bottom: 14px; }
+    .card-title { font-weight: 700; color: #1B4D1E; margin-bottom: 8px; }
+    .label { font-size: 12px; font-weight: 700; color: #5A5A5A; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: block; }
+    .input { width: 100%; padding: 11px 14px; border-radius: 8px; border: 1.5px solid #EDE6D6; font-size: 14px; outline: none; margin-bottom: 14px; display: block; }
+    textarea.input { min-height: 90px; resize: vertical; }
+    .chip { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 700; background: #e6f4e8; color: #2D7A32; margin-right: 4px; margin-bottom: 4px; }
+    .chip.grey { background: #f0f0f0; color: #444; }
+    .chip.yellow { background: #fff3cd; color: #856404; }
+    .chip.faded { background: #f5f0e8; color: #5A5A5A; text-decoration: line-through; }
+    .empty { text-align: center; padding: 48px; color: #5A5A5A; font-size: 14px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Buttons */
+    .btn { padding: 10px 20px; border-radius: 100px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .btn-green { background: #1B4D1E; color: #fff; }
+    .btn-red { background: #c0392b; color: #fff; }
+    .btn-grey { background: #EDE6D6; color: #1a1a1a; }
+    .btn-outline { background: #fff; color: #1B4D1E; border: 1.5px solid #1B4D1E; }
+
+    /* Add listing form */
+    .new-listing-card { background: #fff; border-radius: 12px; padding: 20px; border: 2px solid #2D7A32; margin-bottom: 14px; }
+    .type-radios { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .type-radio-label { display: flex; align-items: center; gap: 6px; border: 1.5px solid #EDE6D6; border-radius: 100px; padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 700; background: #fffdf7; }
+    .pricing-helper { background: #f5f0e8; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+    .pricing-helper-title { font-size: 11px; font-weight: 700; color: #5A5A5A; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .tier-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tier-btn { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 100px; border: 1.5px solid #1B4D1E; background: #fff; color: #1B4D1E; cursor: pointer; }
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .form-row { display: flex; gap: 8px; }
+
+    /* Shop tab */
+    .photo-uploader { border: 2px dashed #EDE6D6; border-radius: 10px; overflow: hidden; cursor: pointer; margin-bottom: 10px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; background: #fffdf7; position: relative; }
+    .photo-uploader img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-placeholder { text-align: center; padding: 24px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    @media (max-width: 600px) {
+      .sidebar { display: none; }
+      .price-grid { grid-template-columns: 1fr 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
 
-const { createClient } = supabase;
-const supabaseClient = createClient(
-  "https://azelftspngjhmqrjtxby.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc"
-);
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <img src="https://latebloomersbeta.github.io/latebloomers/logo.png" alt="Late Bloomers" />
+    <div class="login-title">Florist login</div>
+    <div class="login-sub">Late Bloomers partner portal</div>
+    <input class="login-input" id="login-email" type="email" placeholder="Email address" />
+    <input class="login-input" id="login-password" type="password" placeholder="Password" />
+    <div class="login-err" id="login-err" style="display:none"></div>
+    <button class="login-btn" id="login-btn">Sign in</button>
+  </div>
+</div>
 
-const LOGO_URL = "https://latebloomersbeta.github.io/latebloomers/logo.png";
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="dash-inner">
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <img src="https://latebloomersbeta.github.io/latebloomers/logo.png" alt="Late Bloomers" />
+        <div class="sidebar-name">Late Bloomers</div>
+        <div class="sidebar-sub" id="sidebar-shop-name"></div>
+      </div>
+      <div class="nav-item active" data-tab="listings">🌷 Today's listings</div>
+      <div class="nav-item" data-tab="orders">🛍️ Orders</div>
+      <div class="nav-item" data-tab="shop">🏪 My shop</div>
+      <div class="nav-item" data-tab="earnings">💷 Earnings</div>
+      <div class="sidebar-foot" id="logout-btn">↩ Log out</div>
+    </div>
+    <div class="main">
+      <!-- LISTINGS TAB -->
+      <div class="tab-content active" id="tab-listings">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div class="page-title">Today's listings</div>
+          <button class="btn btn-green" id="add-listing-btn">+ Add listing</button>
+        </div>
+        <div id="new-listing-form" style="display:none">
+          <div class="new-listing-card">
+            <div style="font-weight:700; color:#1B4D1E; margin-bottom:16px;">New listing</div>
+            <div class="type-radios">
+              <label class="type-radio-label"><input type="radio" name="type" value="bouquet" checked style="accent-color:#1B4D1E"> Bouquet</label>
+              <label class="type-radio-label"><input type="radio" name="type" value="bunch" style="accent-color:#1B4D1E"> Bunch</label>
+              <label class="type-radio-label"><input type="radio" name="type" value="surprise bunch" style="accent-color:#1B4D1E"> Surprise bunch</label>
+            </div>
+            <label class="label">Bundle name</label>
+            <input class="input" id="f-title" placeholder="e.g. Mixed seasonal bunch" />
+            <label class="label">Description (optional)</label>
+            <textarea class="input" id="f-desc" placeholder="What's in the bunch..."></textarea>
+            <div class="pricing-helper">
+              <div class="pricing-helper-title">Suggested pricing</div>
+              <div class="tier-btns">
+                <button class="tier-btn" data-pct="0.35">End of life <span style="opacity:.6">~65% off</span></button>
+                <button class="tier-btn" data-pct="0.55">Surplus <span style="opacity:.6">~45% off</span></button>
+                <button class="tier-btn" data-pct="0.75">Premium <span style="opacity:.6">~25% off</span></button>
+              </div>
+            </div>
+            <div class="price-grid">
+              <div>
+                <label class="label">Original price (£)</label>
+                <input class="input" id="f-original-price" type="text" inputmode="decimal" placeholder="e.g. 28" style="margin-bottom:0" />
+              </div>
+              <div>
+                <label class="label">Rescue price (£)</label>
+                <input class="input" id="f-price" type="text" inputmode="decimal" placeholder="e.g. 10" style="margin-bottom:0" />
+              </div>
+              <div>
+                <label class="label">Quantity</label>
+                <input class="input" id="f-qty" type="text" inputmode="numeric" placeholder="e.g. 5" style="margin-bottom:0" />
+              </div>
+              <div>
+                <label class="label">Collect by</label>
+                <input class="input" id="f-collect" type="time" style="margin-bottom:0" />
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:16px;">
+              <button class="btn btn-green" id="save-listing-btn">Add listing</button>
+              <button class="btn btn-grey" id="cancel-listing-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div id="listings-list"></div>
+      </div>
 
-const c = {
-  green: '#1B4D1E', mid: '#2D7A32', cream: '#F5F0E8', dark: '#EDE6D6',
-  white: '#FFFFFF', text: '#1A1A1A', soft: '#5A5A5A', yellow: '#ffd21f'
-};
+      <!-- ORDERS TAB -->
+      <div class="tab-content" id="tab-orders">
+        <div class="page-title">Orders</div>
+        <div id="orders-list"></div>
+      </div>
 
-const styles = {
-  dash:        { display: 'flex', minHeight: '100vh' },
-  sidebar:     { width: 220, background: c.green, display: 'flex', flexDirection: 'column', padding: '24px 0', minHeight: '100vh', position: 'sticky', top: 0 },
-  logoArea:    { padding: '0 20px 24px', borderBottom: 'rgba(255,255,255,0.12) 1px solid', marginBottom: 12 },
-  logoName:    { color: c.yellow, fontWeight: 900, fontSize: 15 },
-  logoSub:     { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 },
-  navItem:     (a) => ({ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', cursor: 'pointer', background: a ? 'rgba(255,255,255,0.12)' : 'transparent', color: a ? '#fff' : 'rgba(255,255,255,0.65)', fontWeight: a ? 700 : 500, fontSize: 14, borderLeft: a ? `3px solid ${c.yellow}` : '3px solid transparent' }),
-  sidebarFoot: { padding: '12px 20px', color: 'rgba(255,255,255,0.5)', fontSize: 13, cursor: 'pointer', marginTop: 'auto' },
-  main:        { flex: 1, padding: 32, maxWidth: 800 },
-  pageTitle:   { fontSize: 22, fontWeight: 800, color: c.green, marginBottom: 20 },
-  card:        { background: c.white, borderRadius: 12, padding: 20, border: `1px solid ${c.dark}`, marginBottom: 14 },
-  label:       { fontSize: 12, fontWeight: 700, color: c.soft, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 },
-  input:       { width: '100%', padding: '11px 14px', borderRadius: 8, border: `1.5px solid ${c.dark}`, fontSize: 14, outline: 'none', marginBottom: 14 },
-  textarea:    { width: '100%', padding: '11px 14px', borderRadius: 8, border: `1.5px solid ${c.dark}`, fontSize: 14, outline: 'none', marginBottom: 14, minHeight: 90, resize: 'vertical' },
-  row:         { display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' },
-  btn:         (col) => ({ padding: '10px 20px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', background: col === 'green' ? c.green : col === 'red' ? '#c0392b' : c.dark, color: col === 'green' || col === 'red' ? '#fff' : c.text }),
-  chip:        { padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700, background: '#e6f4e8', color: c.mid },
-  empty:       { textAlign: 'center', padding: 48, color: c.soft, fontSize: 14 },
-  loginWrap:   { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.cream },
-  loginBox:    { background: c.white, borderRadius: 16, padding: 40, width: 360, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' },
-  loginInput:  { width: '100%', padding: '12px 14px', borderRadius: 8, border: `1.5px solid ${c.dark}`, fontSize: 14, outline: 'none', marginBottom: 12 },
-  loginBtn:    { width: '100%', padding: 13, borderRadius: 8, border: 'none', background: c.green, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }
-};
+      <!-- SHOP TAB -->
+      <div class="tab-content" id="tab-shop">
+        <div class="page-title">My shop</div>
+        <div class="card">
+          <div class="card-title">Shop photo</div>
+          <div style="font-size:13px; color:#5A5A5A; margin-bottom:12px;">Square photos work best — think of it like an Instagram profile picture for your shop.</div>
+          <input type="file" id="photo-input" accept="image/*" style="display:none" />
+          <div class="photo-uploader" id="photo-uploader">
+            <div class="photo-placeholder" id="photo-placeholder">
+              <div style="font-size:32px; margin-bottom:8px;">📷</div>
+              <div style="font-size:13px; color:#5A5A5A; font-weight:600;">Upload photo</div>
+              <div style="font-size:11px; color:#b4b2a9; margin-top:4px;">JPG or PNG</div>
+            </div>
+            <img id="photo-preview" style="display:none; width:100%; height:100%; object-fit:cover;" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Shop details</div>
+          <label class="label">Shop name</label>
+          <input class="input" id="shop-name" placeholder="Your shop name" />
+          <div class="two-col">
+            <div>
+              <label class="label">Area (e.g. Hackney)</label>
+              <input class="input" id="shop-area" placeholder="Area" />
+            </div>
+            <div>
+              <label class="label">Postcode</label>
+              <input class="input" id="shop-postcode" placeholder="E8" />
+            </div>
+          </div>
+          <label class="label">About your shop (optional)</label>
+          <textarea class="input" id="shop-bio" placeholder="Tell customers a bit about your shop..."></textarea>
+          <button class="btn btn-green" id="save-shop-btn">Save changes</button>
+          <span id="save-shop-ok" style="display:none; margin-left:12px; color:#2D7A32; font-size:13px; font-weight:700;">Saved!</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Password</div>
+          <button class="btn btn-grey" id="show-pw-btn">Change password</button>
+          <div id="pw-form" style="display:none; margin-top:12px;">
+            <input class="input" id="new-pw" type="password" placeholder="New password" />
+            <input class="input" id="confirm-pw" type="password" placeholder="Confirm new password" />
+            <div id="pw-err" style="color:#c0392b; font-size:13px; margin-bottom:8px; display:none;"></div>
+            <div id="pw-ok" style="color:#2D7A32; font-size:13px; margin-bottom:8px; display:none;">Password updated!</div>
+            <div class="form-row">
+              <button class="btn btn-green" id="save-pw-btn">Update password</button>
+              <button class="btn btn-grey" id="cancel-pw-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-// ── LOGIN ──
-function LoginScreen() {
-  const [email, setEmail]     = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [err, setErr]         = React.useState('');
-  const [loading, setLoading] = React.useState(false);
-
-  async function handleLogin() {
-    setErr(''); setLoading(true);
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) setErr('Wrong email or password.');
-    setLoading(false);
-  }
-
-  return (
-    <div style={styles.loginWrap}>
-      <div style={styles.loginBox}>
-        <img src={LOGO_URL} alt="Late Bloomers" style={{ width: 80, display: 'block', margin: '0 auto 20px' }} />
-        <div style={{ fontSize: 20, fontWeight: 800, color: c.green, textAlign: 'center', marginBottom: 4 }}>Florist login</div>
-        <div style={{ fontSize: 13, color: c.soft, textAlign: 'center', marginBottom: 24 }}>Late Bloomers partner portal</div>
-        <input style={styles.loginInput} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
-        <input style={styles.loginInput} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-        {err && <div style={{ color: '#c0392b', fontSize: 13, marginBottom: 10 }}>{err}</div>}
-        <button style={styles.loginBtn} onClick={handleLogin} disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+      <!-- EARNINGS TAB -->
+      <div class="tab-content" id="tab-earnings">
+        <div class="page-title">Earnings</div>
+        <div class="card">
+          <div class="card-title">Coming soon</div>
+          <div style="font-size:14px; color:#5A5A5A; line-height:1.6;">Your earnings dashboard will appear here once payments go live. Payouts will go to your registered bank account every Monday.</div>
+        </div>
       </div>
     </div>
-  );
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://azelftspngjhmqrjtxby.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6ZWxmdHNwbmdqaG1xcmp0eGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTkyMjUsImV4cCI6MjA5NzE3NTIyNX0.aE_ImFjexiHMMU-dKpqB0_7iJxLkauGL9a0QWVIKFLc';
+
+let currentSession = null;
+let currentProfile = null;
+
+// ── SUPABASE HELPERS ──
+
+async function sbFetch(path, options = {}) {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + (currentSession?.access_token || SUPABASE_KEY),
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+  const res = await fetch(SUPABASE_URL + path, { ...options, headers });
+  const text = await res.text();
+  try { return { data: text ? JSON.parse(text) : null, ok: res.ok, status: res.status }; }
+  catch { return { data: null, ok: false, status: res.status }; }
 }
 
-// ── ADD LISTING FORM ──
-function AddListingForm({ profile, onSaved, onCancel }) {
-  const [saving, setSaving] = React.useState(false);
+async function getSession() {
+  // Try reading from localStorage (Supabase stores session there)
+  const raw = localStorage.getItem('sb-azelftspngjhmqrjtxby-auth-token');
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    // Check if token is still valid
+    if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) return null;
+    return parsed;
+  } catch { return null; }
+}
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const data = new FormData(e.target);
-    const title = (data.get('title') || '').trim();
-    const price = (data.get('price') || '').trim();
-    const originalPrice = (data.get('original_price') || '').trim();
-    const desc  = (data.get('description') || '').trim();
-    const qty   = (data.get('quantity') || '').trim();
-    const col   = (data.get('collect_by') || '').trim();
-    const type  = (data.get('type') || 'bunch').trim();
+async function signIn(email, password) {
+  const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.error_description || 'Wrong email or password.' };
+  // Save session
+  localStorage.setItem('sb-azelftspngjhmqrjtxby-auth-token', JSON.stringify(data));
+  return { session: data };
+}
 
-    if (!title) { alert('Please add a bundle name.'); return; }
-    if (!profile?.email)  { alert('Profile not loaded yet, please wait a moment.'); return; }
+async function signOut() {
+  await fetch(SUPABASE_URL + '/auth/v1/logout', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentSession?.access_token }
+  });
+  localStorage.removeItem('sb-azelftspngjhmqrjtxby-auth-token');
+  currentSession = null;
+  currentProfile = null;
+}
 
-    setSaving(true);
-    const { error } = await supabaseClient.from('listings').insert({
+async function updatePassword(newPassword) {
+  const res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+    method: 'PUT',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentSession.access_token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: newPassword })
+  });
+  return res.ok;
+}
+
+// ── PROFILE ──
+
+async function loadProfile(email) {
+  const { data } = await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(email) + '&limit=1');
+  if (data && data.length > 0) {
+    currentProfile = data[0];
+  } else {
+    currentProfile = { email, shop_name: '', area: '', postcode: '', bio: '', photo_url: '' };
+  }
+  document.getElementById('sidebar-shop-name').textContent = currentProfile.shop_name || email;
+  populateShopForm();
+}
+
+function populateShopForm() {
+  if (!currentProfile) return;
+  document.getElementById('shop-name').value     = currentProfile.shop_name || '';
+  document.getElementById('shop-area').value     = currentProfile.area || '';
+  document.getElementById('shop-postcode').value = currentProfile.postcode || '';
+  document.getElementById('shop-bio').value      = currentProfile.bio || '';
+  if (currentProfile.photo_url) {
+    document.getElementById('photo-preview').src = currentProfile.photo_url;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-placeholder').style.display = 'none';
+  }
+}
+
+// ── SHOW/HIDE SCREENS ──
+
+function showDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadListings();
+}
+
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+// ── TABS ──
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const tab = item.dataset.tab;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'listings') loadListings();
+    if (tab === 'orders') loadOrders();
+  });
+});
+
+// ── LOGIN ──
+
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-err');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+
+  const { session, error } = await signIn(email, password);
+  btn.textContent = 'Sign in';
+  btn.disabled = false;
+
+  if (error) {
+    errEl.textContent = error;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  currentSession = session;
+  await loadProfile(session.user.email);
+  showDashboard();
+});
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
+// ── LOGOUT ──
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await signOut();
+  showLogin();
+});
+
+// ── LISTINGS ──
+
+async function loadListings() {
+  const el = document.getElementById('listings-list');
+  if (!currentProfile?.email) { el.innerHTML = '<div class="empty">Loading profile...</div>'; return; }
+  el.innerHTML = '<div class="empty">Loading...</div>';
+  const { data } = await sbFetch('/rest/v1/listings?florist_email=eq.' + encodeURIComponent(currentProfile.email) + '&order=created_at.desc');
+  const listings = data || [];
+  if (listings.length === 0) {
+    el.innerHTML = '<div class="empty">No listings yet. Add your first one above.</div>';
+    return;
+  }
+  el.innerHTML = listings.map(l => `
+    <div class="card" id="listing-${l.id}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <div style="font-weight:700; font-size:16px; color:#1B4D1E; margin-bottom:4px;">${l.title || l.name || 'Listing'}</div>
+          ${l.description ? `<div style="font-size:13px; color:#5A5A5A; margin-bottom:8px;">${l.description}</div>` : ''}
+          <div>
+            ${l.original_price ? `<span class="chip faded">£${l.original_price}</span>` : ''}
+            ${l.price ? `<span class="chip">£${l.price}</span>` : ''}
+            ${l.type ? `<span class="chip grey" style="text-transform:capitalize">${l.type}</span>` : ''}
+            ${l.quantity ? `<span class="chip">${l.quantity} left</span>` : ''}
+            ${l.collect_by ? `<span class="chip">Collect by ${l.collect_by}</span>` : ''}
+            <span class="chip ${l.active ? '' : 'yellow'}">${l.active ? 'Live' : 'Hidden'}</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn ${l.active ? 'btn-grey' : 'btn-green'}" onclick="toggleListing('${l.id}', ${l.active})">${l.active ? 'Hide' : 'Go live'}</button>
+          <button class="btn btn-red" onclick="deleteListing('${l.id}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function toggleListing(id, currentActive) {
+  await sbFetch('/rest/v1/listings?id=eq.' + id, {
+    method: 'PATCH',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ active: !currentActive })
+  });
+  loadListings();
+}
+
+async function deleteListing(id) {
+  await sbFetch('/rest/v1/listings?id=eq.' + id, { method: 'DELETE' });
+  loadListings();
+}
+
+// Add listing form
+document.getElementById('add-listing-btn').addEventListener('click', () => {
+  document.getElementById('new-listing-form').style.display = 'block';
+  document.getElementById('add-listing-btn').style.display = 'none';
+});
+
+document.getElementById('cancel-listing-btn').addEventListener('click', () => {
+  document.getElementById('new-listing-form').style.display = 'none';
+  document.getElementById('add-listing-btn').style.display = 'inline-block';
+  clearListingForm();
+});
+
+document.querySelectorAll('.tier-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const orig = parseFloat(document.getElementById('f-original-price').value);
+    if (!orig) { alert('Enter the original price first, then click a tier.'); return; }
+    document.getElementById('f-price').value = Math.round(orig * parseFloat(btn.dataset.pct));
+  });
+});
+
+document.getElementById('save-listing-btn').addEventListener('click', async () => {
+  const title    = document.getElementById('f-title').value.trim();
+  const desc     = document.getElementById('f-desc').value.trim();
+  const origPrice = document.getElementById('f-original-price').value.trim();
+  const price    = document.getElementById('f-price').value.trim();
+  const qty      = document.getElementById('f-qty').value.trim();
+  const collect  = document.getElementById('f-collect').value.trim();
+  const type     = document.querySelector('input[name="type"]:checked')?.value || 'bouquet';
+
+  if (!title) { alert('Please add a bundle name.'); return; }
+  if (!currentProfile?.email) { alert('Profile not loaded yet, please wait.'); return; }
+
+  const btn = document.getElementById('save-listing-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const { ok, data } = await sbFetch('/rest/v1/listings', {
+    method: 'POST',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({
       name:           title,
       title:          title,
       description:    desc || null,
       price:          price ? parseFloat(price) : null,
-      original_price: originalPrice ? parseFloat(originalPrice) : null,
+      original_price: origPrice ? parseFloat(origPrice) : null,
       quantity:       qty ? parseInt(qty) : null,
-      collect_by:     col || null,
-      florist_email:  profile.email,
-      florist_id:     profile.id || null,
-      shop_name:      profile.shop_name || '',
-      area:           profile.area || profile.postcode || '',
+      collect_by:     collect || null,
+      florist_email:  currentProfile.email,
+      florist_id:     currentProfile.id || null,
+      shop_name:      currentProfile.shop_name || '',
+      area:           currentProfile.area || currentProfile.postcode || '',
       active:         false,
       status:         'active',
       type:           type,
+    })
+  });
+
+  btn.textContent = 'Add listing';
+  btn.disabled = false;
+
+  if (!ok) { alert('Could not save listing. Please try again.'); return; }
+
+  document.getElementById('new-listing-form').style.display = 'none';
+  document.getElementById('add-listing-btn').style.display = 'inline-block';
+  clearListingForm();
+  loadListings();
+});
+
+function clearListingForm() {
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-original-price').value = '';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-qty').value = '';
+  document.getElementById('f-collect').value = '';
+  const firstRadio = document.querySelector('input[name="type"][value="bouquet"]');
+  if (firstRadio) firstRadio.checked = true;
+}
+
+// ── ORDERS ──
+
+async function loadOrders() {
+  const el = document.getElementById('orders-list');
+  el.innerHTML = '<div class="empty">Loading...</div>';
+  const { data } = await sbFetch('/rest/v1/orders?florist_email=eq.' + encodeURIComponent(currentProfile?.email || '') + '&order=created_at.desc');
+  const orders = data || [];
+  if (orders.length === 0) {
+    el.innerHTML = '<div class="empty">No orders yet. They will appear here once customers start buying.</div>';
+    return;
+  }
+  el.innerHTML = orders.map(o => `
+    <div class="card">
+      <div style="font-weight:700; color:#1B4D1E; margin-bottom:4px;">${o.bundle_name || 'Order'}</div>
+      <div style="font-size:13px; color:#5A5A5A;">Customer: ${o.customer_email} · £${o.total} · ${(o.created_at || '').slice(0,10)}</div>
+    </div>
+  `).join('');
+}
+
+// ── SHOP ──
+
+document.getElementById('photo-uploader').addEventListener('click', () => {
+  document.getElementById('photo-input').click();
+});
+
+document.getElementById('photo-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const placeholder = document.getElementById('photo-placeholder');
+  placeholder.innerHTML = '<div style="font-size:13px; color:#5A5A5A; font-weight:600;">Uploading...</div>';
+
+  // Read file as base64
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const base64 = ev.target.result.split(',')[1];
+    const ext = file.name.split('.').pop();
+    const userId = currentSession?.user?.id || 'unknown';
+    const path = `shop-photos/${userId}-${Date.now()}.${ext}`;
+
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/florist-assets/${path}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': file.type,
+        'x-upsert': 'true'
+      },
+      body: file
     });
 
-    if (error) {
-      alert('Could not save: ' + error.message);
-      setSaving(false);
+    if (!res.ok) {
+      alert('Photo upload failed. Please try again.');
+      placeholder.innerHTML = '<div style="font-size:32px; margin-bottom:8px;">📷</div><div style="font-size:13px; color:#5A5A5A; font-weight:600;">Upload photo</div><div style="font-size:11px; color:#b4b2a9; margin-top:4px;">JPG or PNG</div>';
       return;
     }
-    onSaved();
-  }
 
-  const inp = { width: '100%', padding: '11px 14px', borderRadius: 8, border: '1.5px solid #EDE6D6', fontSize: 14, outline: 'none', fontFamily: 'inherit' };
-  const lbl = { fontSize: 12, fontWeight: 700, color: '#5A5A5A', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6, display: 'block' };
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/florist-assets/${path}`;
 
-  return (
-    <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '2px solid #2D7A32', marginBottom: 14 }}>
-      <div style={{ fontWeight: 700, color: '#1B4D1E', marginBottom: 16 }}>New listing</div>
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          {['Bouquet', 'Bunch', 'Surprise bunch'].map(t => (
-            <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1.5px solid #EDE6D6', borderRadius: 100, padding: '7px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: '#fffdf7' }}>
-              <input type="radio" name="type" value={t.toLowerCase()} defaultChecked={t === 'Bouquet'} style={{ accentColor: '#1B4D1E' }} />
-              {t}
-            </label>
-          ))}
-        </div>
-        <label style={lbl}>Bundle name</label>
-        <input name="title" style={{ ...inp, marginBottom: 14 }} placeholder="e.g. Mixed seasonal bunch" />
-        <label style={lbl}>Description (optional)</label>
-        <textarea name="description" style={{ ...inp, marginBottom: 14, minHeight: 80, resize: 'vertical' }} placeholder="What's in the bunch..." />
-        <div style={{ background: '#f5f0e8', borderRadius: 8, padding: '12px 14px', marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#5A5A5A', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Suggested pricing</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {[{ label: 'End of life', sub: '~65% off', pct: 0.35 }, { label: 'Surplus', sub: '~45% off', pct: 0.55 }, { label: 'Premium', sub: '~25% off', pct: 0.75 }].map(tier => (
-              <button key={tier.label} type="button"
-                style={{ fontSize: 12, fontWeight: 700, padding: '6px 12px', borderRadius: 100, border: '1.5px solid #1B4D1E', background: '#fff', color: '#1B4D1E', cursor: 'pointer' }}
-                onClick={() => {
-                  const origInput = document.querySelector('input[name="original_price"]');
-                  const priceInput = document.querySelector('input[name="price"]');
-                  if (origInput?.value) {
-                    priceInput.value = Math.round(parseFloat(origInput.value) * tier.pct);
-                  } else {
-                    alert('Enter the original price first, then click a tier.');
-                  }
-                }}>
-                {tier.label} <span style={{ opacity: .6 }}>{tier.sub}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
-          <div>
-            <label style={lbl}>Original price (£)</label>
-            <input name="original_price" type="text" inputMode="decimal" style={inp} placeholder="e.g. 28" />
-          </div>
-          <div>
-            <label style={lbl}>Rescue price (£)</label>
-            <input name="price" type="text" inputMode="decimal" style={inp} placeholder="e.g. 10" />
-          </div>
-          <div>
-            <label style={lbl}>Quantity</label>
-            <input name="quantity" type="text" inputMode="numeric" style={inp} placeholder="e.g. 5" />
-          </div>
-          <div>
-            <label style={lbl}>Collect by</label>
-            <input name="collect_by" type="time" style={inp} />
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button type="submit" style={{ padding: '10px 20px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', background: '#1B4D1E', color: '#fff' }} disabled={saving}>
-            {saving ? 'Saving...' : 'Add listing'}
-          </button>
-          <button type="button" style={{ padding: '10px 20px', borderRadius: 100, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', background: '#EDE6D6', color: '#1A1A1A' }} onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-// ── LISTINGS TAB ──
-function ListingsTab({ profile }) {
-  const [listings, setListings] = React.useState([]);
-  const [loading, setLoading]   = React.useState(true);
-  const [showForm, setShowForm] = React.useState(false);
-
-  React.useEffect(() => { if (profile?.email) loadListings(); else setLoading(false); }, [profile]);
-
-  async function loadListings() {
-    setLoading(true);
-    const { data, error } = await supabaseClient.from('listings').select('*').eq('florist_email', profile.email).order('created_at', { ascending: false });
-    if (error) console.error('Load listings error:', error.message);
-    setListings(data || []);
-    setLoading(false);
-  }
-
-  async function toggleActive(id, current) {
-    await supabaseClient.from('listings').update({ active: !current }).eq('id', id);
-    setListings(ls => ls.map(l => l.id === id ? { ...l, active: !current } : l));
-  }
-
-  async function deleteListing(id) {
-    await supabaseClient.from('listings').delete().eq('id', id);
-    setListings(ls => ls.filter(l => l.id !== id));
-  }
-
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div style={styles.pageTitle}>Today's listings</div>
-        {!showForm && <button style={styles.btn('green')} onClick={() => setShowForm(true)}>+ Add listing</button>}
-      </div>
-
-      {showForm && (
-        <AddListingForm
-          profile={profile}
-          onSaved={async () => { setShowForm(false); await loadListings(); }}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
-
-      {loading && <div style={styles.empty}>Loading...</div>}
-      {!loading && listings.length === 0 && !showForm && <div style={styles.empty}>No listings yet. Add your first one above.</div>}
-      {listings.map(l => (
-        <div key={l.id} style={styles.card}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: c.green, marginBottom: 4 }}>{l.title || l.name}</div>
-              {l.description && <div style={{ fontSize: 13, color: c.soft, marginBottom: 8 }}>{l.description}</div>}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {l.original_price && <span style={{ ...styles.chip, background: '#f5f0e8', color: '#5A5A5A', textDecoration: 'line-through' }}>£{l.original_price}</span>}
-                <span style={styles.chip}>£{l.price}</span>
-                {l.type && <span style={{ ...styles.chip, background: '#f0f0f0', color: '#444', textTransform: 'capitalize' }}>{l.type}</span>}
-                {l.quantity && <span style={styles.chip}>{l.quantity} left</span>}
-                {l.collect_by && <span style={styles.chip}>Collect by {l.collect_by}</span>}
-                <span style={{ ...styles.chip, background: l.active ? '#e6f4e8' : '#fff3cd', color: l.active ? c.mid : '#856404' }}>{l.active ? 'Live' : 'Hidden'}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={styles.btn(l.active ? null : 'green')} onClick={() => toggleActive(l.id, l.active)}>{l.active ? 'Hide' : 'Go live'}</button>
-              <button style={styles.btn('red')} onClick={() => deleteListing(l.id)}>Delete</button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── ORDERS TAB ──
-function OrdersTab({ profile }) {
-  const [orders, setOrders]   = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    async function load() {
-      const { data } = await supabaseClient.from('orders').select('*').eq('florist_email', profile?.email || '').order('created_at', { ascending: false });
-      setOrders(data || []);
-      setLoading(false);
-    }
-    load();
-  }, []);
-
-  return (
-    <div>
-      <div style={styles.pageTitle}>Orders</div>
-      {loading && <div style={styles.empty}>Loading...</div>}
-      {!loading && orders.length === 0 && <div style={styles.empty}>No orders yet. They will appear here once customers start buying.</div>}
-      {orders.map(o => (
-        <div key={o.id} style={styles.card}>
-          <div style={{ fontWeight: 700, color: c.green, marginBottom: 4 }}>{o.bundle_name || 'Order'}</div>
-          <div style={{ fontSize: 13, color: c.soft }}>Customer: {o.customer_email} · £{o.total} · {o.created_at?.slice(0,10)}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── SHOP TAB ──
-function ShopTab({ profile, onProfileUpdate, session }) {
-  const [form, setForm]               = React.useState({ shop_name: '', area: '', postcode: '', bio: '', photo_url: '' });
-  const [saving, setSaving]           = React.useState(false);
-  const [saved, setSaved]             = React.useState(false);
-  const [uploading, setUploading]     = React.useState(false);
-  const [photoPreview, setPhotoPreview] = React.useState('');
-  const [changingPw, setChangingPw]   = React.useState(false);
-  const [newPw, setNewPw]             = React.useState('');
-  const [confirmPw, setConfirmPw]     = React.useState('');
-  const [pwErr, setPwErr]             = React.useState('');
-  const [pwOk, setPwOk]               = React.useState(false);
-  const [savingPw, setSavingPw]       = React.useState(false);
-  const fileInputRef                  = React.useRef();
-
-  React.useEffect(() => {
-    if (profile) {
-      setForm({ shop_name: profile.shop_name || '', area: profile.area || '', postcode: profile.postcode || '', bio: profile.bio || '', photo_url: profile.photo_url || '' });
-      if (profile.photo_url) setPhotoPreview(profile.photo_url);
-    }
-  }, [profile]);
-
-  async function handlePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const ext  = file.name.split('.').pop();
-    const path = `shop-photos/${user.id}-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabaseClient.storage.from('florist-assets').upload(path, file, { upsert: true });
-    if (uploadError) {
-      alert('Photo upload failed: ' + uploadError.message);
-      setUploading(false);
-      return;
-    }
-    const { data: { publicUrl } } = supabaseClient.storage.from('florist-assets').getPublicUrl(path);
-    // save immediately to florists table so it persists
-    await supabaseClient.from('florists').update({ photo_url: publicUrl }).eq('email', session?.user?.email);
-    setPhotoPreview(publicUrl);
-    setForm(f => ({ ...f, photo_url: publicUrl }));
-    onProfileUpdate({ ...profile, photo_url: publicUrl });
-    setUploading(false);
-  }
-
-  async function saveProfile() {
-    setSaving(true);
-    await supabaseClient.from('florists').update({ shop_name: form.shop_name, area: form.area, postcode: form.postcode, bio: form.bio, photo_url: form.photo_url }).eq('email', session?.user?.email);
-    onProfileUpdate({ ...profile, ...form });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    setSaving(false);
-  }
-
-  async function changePassword() {
-    setPwErr('');
-    if (newPw !== confirmPw) { setPwErr('Passwords do not match.'); return; }
-    if (newPw.length < 8) { setPwErr('Password must be at least 8 characters.'); return; }
-    setSavingPw(true);
-    const { error } = await supabaseClient.auth.updateUser({ password: newPw });
-    if (error) { setPwErr('Could not update password. Try again.'); }
-    else { setPwOk(true); setNewPw(''); setConfirmPw(''); setTimeout(() => { setChangingPw(false); setPwOk(false); }, 2000); }
-    setSavingPw(false);
-  }
-
-  return (
-    <div>
-      <div style={styles.pageTitle}>My shop</div>
-      <div style={styles.card}>
-        <div style={{ fontWeight: 700, color: c.green, marginBottom: 4 }}>Shop photo</div>
-        <div style={{ fontSize: 13, color: c.soft, marginBottom: 12 }}>Square photos work best — think of it like an Instagram profile picture for your shop.</div>
-        <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
-        <div onClick={() => fileInputRef.current.click()} style={{ border: '2px dashed #EDE6D6', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', marginBottom: 10, width: 200, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fffdf7', position: 'relative' }}>
-          {photoPreview ? (
-            <>
-              <img src={photoPreview} alt="Shop" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.35)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0)'}>
-                <span style={{ color: '#fff', fontSize: 12, fontWeight: 700, opacity: 0, transition: 'opacity .2s' }}
-                  onMouseEnter={e => e.style.opacity = 1}
-                  onMouseLeave={e => e.style.opacity = 0}>
-                  Change photo
-                </span>
-              </div>
-            </>
-          ) : (
-            <div style={{ textAlign: 'center', padding: 24 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-              <div style={{ fontSize: 13, color: c.soft, fontWeight: 600 }}>{uploading ? 'Uploading...' : 'Upload photo'}</div>
-              <div style={{ fontSize: 11, color: '#b4b2a9', marginTop: 4 }}>JPG or PNG</div>
-            </div>
-          )}
-        </div>
-        {photoPreview && (
-          <button style={{ ...styles.btn(null), fontSize: 12, marginTop: 4 }} onClick={() => fileInputRef.current.click()}>
-            {uploading ? 'Uploading...' : '↑ Change photo'}
-          </button>
-        )}
-      </div>
-      <div style={styles.card}>
-        <div style={{ fontWeight: 700, color: c.green, marginBottom: 16 }}>Shop details</div>
-        <div style={styles.label}>Shop name</div>
-        <input style={styles.input} value={form.shop_name} onChange={e => setForm(f => ({ ...f, shop_name: e.target.value }))} placeholder="Your shop name" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <div style={styles.label}>Area (e.g. Hackney)</div>
-            <input style={styles.input} value={form.area} onChange={e => setForm(f => ({ ...f, area: e.target.value }))} placeholder="Area" />
-          </div>
-          <div>
-            <div style={styles.label}>Postcode</div>
-            <input style={styles.input} value={form.postcode} onChange={e => setForm(f => ({ ...f, postcode: e.target.value }))} placeholder="E8" />
-          </div>
-        </div>
-        <div style={styles.label}>About your shop (optional)</div>
-        <textarea style={styles.textarea} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="Tell customers a bit about your shop..." />
-        <button style={styles.btn('green')} onClick={saveProfile} disabled={saving}>{saved ? 'Saved!' : saving ? 'Saving...' : 'Save changes'}</button>
-      </div>
-
-      <div style={styles.card}>
-        <div style={{ fontWeight: 700, color: c.green, marginBottom: 8 }}>Password</div>
-        {!changingPw && <button style={styles.btn(null)} onClick={() => setChangingPw(true)}>Change password</button>}
-        {changingPw && (
-          <div>
-            <input style={styles.input} type="password" placeholder="New password" value={newPw} onChange={e => setNewPw(e.target.value)} />
-            <input style={styles.input} type="password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
-            {pwErr && <div style={{ color: '#c0392b', fontSize: 13, marginBottom: 8 }}>{pwErr}</div>}
-            {pwOk  && <div style={{ color: c.mid,    fontSize: 13, marginBottom: 8 }}>Password updated!</div>}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={styles.btn('green')} onClick={changePassword} disabled={savingPw}>{savingPw ? 'Saving...' : 'Update password'}</button>
-              <button style={styles.btn(null)} onClick={() => { setChangingPw(false); setPwErr(''); }}>Cancel</button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── EARNINGS TAB ──
-function EarningsTab() {
-  return (
-    <div>
-      <div style={styles.pageTitle}>Earnings</div>
-      <div style={styles.card}>
-        <div style={{ fontWeight: 700, color: c.green, marginBottom: 8 }}>Coming soon</div>
-        <div style={{ fontSize: 14, color: c.soft, lineHeight: 1.6 }}>Your earnings dashboard will appear here once payments go live. Payouts will go to your registered bank account every Monday.</div>
-      </div>
-    </div>
-  );
-}
-
-// ── MAIN APP ──
-function App() {
-  const [session, setSession] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [tab, setTab]         = React.useState('listings');
-  const [profile, setProfile] = React.useState(null);
-
-  React.useEffect(() => {
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) loadProfile(session.user.email);
-      setLoading(false);
+    // Save to florists table
+    await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ photo_url: publicUrl })
     });
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_e, session) => {
-      setSession(session);
-      if (session) loadProfile(session.user.email);
-      else setProfile(null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
-  async function loadProfile(email) {
-    const { data } = await supabaseClient.from('florists').select('*').eq('email', email).maybeSingle();
-    if (data) {
-      setProfile(data);
-    } else {
-      // florists row doesn't exist yet — use minimal profile from session
-      setProfile({ email, shop_name: '', area: '', postcode: '', id: null });
-    }
+    currentProfile.photo_url = publicUrl;
+    document.getElementById('photo-preview').src = publicUrl;
+    document.getElementById('photo-preview').style.display = 'block';
+    placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('save-shop-btn').addEventListener('click', async () => {
+  const btn  = document.getElementById('save-shop-btn');
+  const okEl = document.getElementById('save-shop-ok');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const updates = {
+    shop_name: document.getElementById('shop-name').value.trim(),
+    area:      document.getElementById('shop-area').value.trim(),
+    postcode:  document.getElementById('shop-postcode').value.trim(),
+    bio:       document.getElementById('shop-bio').value.trim(),
+  };
+
+  await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), {
+    method: 'PATCH',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify(updates)
+  });
+
+  Object.assign(currentProfile, updates);
+  document.getElementById('sidebar-shop-name').textContent = updates.shop_name || currentSession.user.email;
+
+  btn.textContent = 'Save changes';
+  btn.disabled = false;
+  okEl.style.display = 'inline';
+  setTimeout(() => { okEl.style.display = 'none'; }, 2000);
+});
+
+// Password
+document.getElementById('show-pw-btn').addEventListener('click', () => {
+  document.getElementById('pw-form').style.display = 'block';
+  document.getElementById('show-pw-btn').style.display = 'none';
+});
+
+document.getElementById('cancel-pw-btn').addEventListener('click', () => {
+  document.getElementById('pw-form').style.display = 'none';
+  document.getElementById('show-pw-btn').style.display = 'inline-block';
+  document.getElementById('pw-err').style.display = 'none';
+  document.getElementById('new-pw').value = '';
+  document.getElementById('confirm-pw').value = '';
+});
+
+document.getElementById('save-pw-btn').addEventListener('click', async () => {
+  const newPw     = document.getElementById('new-pw').value;
+  const confirmPw = document.getElementById('confirm-pw').value;
+  const errEl     = document.getElementById('pw-err');
+  const okEl      = document.getElementById('pw-ok');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (newPw !== confirmPw) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+  if (newPw.length < 8)   { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+
+  const ok = await updatePassword(newPw);
+  if (!ok) { errEl.textContent = 'Could not update password. Try again.'; errEl.style.display = 'block'; return; }
+
+  okEl.style.display = 'block';
+  document.getElementById('new-pw').value = '';
+  document.getElementById('confirm-pw').value = '';
+  setTimeout(() => {
+    document.getElementById('pw-form').style.display = 'none';
+    document.getElementById('show-pw-btn').style.display = 'inline-block';
+    okEl.style.display = 'none';
+  }, 2000);
+});
+
+// ── INIT ──
+
+async function init() {
+  const session = await getSession();
+  if (session) {
+    currentSession = session;
+    await loadProfile(session.user?.email || session.email);
+    showDashboard();
+  } else {
+    showLogin();
   }
-
-  async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    setSession(null); setProfile(null);
-  }
-
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: c.soft, fontSize: 14 }}>Loading...</div>;
-  if (!session) return <LoginScreen />;
-
-  const nav = [
-    { key: 'listings', label: "Today's listings", icon: '🌷' },
-    { key: 'orders',   label: 'Orders',            icon: '🛍️' },
-    { key: 'shop',     label: 'My shop',            icon: '🏪' },
-    { key: 'earnings', label: 'Earnings',           icon: '💷' },
-  ];
-
-  return (
-    <div style={styles.dash}>
-      <div style={styles.sidebar}>
-        <div style={styles.logoArea}>
-          <img src={LOGO_URL} alt="Late Bloomers" style={{ width: 48, marginBottom: 8 }} />
-          <div style={styles.logoName}>Late Bloomers</div>
-          <div style={styles.logoSub}>{profile?.shop_name || session.user.email}</div>
-        </div>
-        {nav.map(n => (
-          <div key={n.key} style={styles.navItem(tab === n.key)} onClick={() => setTab(n.key)}>
-            <span>{n.icon}</span> {n.label}
-          </div>
-        ))}
-        <div style={styles.sidebarFoot} onClick={handleLogout}>↩ Log out</div>
-      </div>
-      <div style={styles.main}>
-        {tab === 'listings' && <ListingsTab profile={profile} />}
-        {tab === 'orders'   && <OrdersTab   profile={profile} />}
-        {tab === 'shop'     && <ShopTab     profile={profile} onProfileUpdate={p => setProfile(p)} session={session} />}
-        {tab === 'earnings' && <EarningsTab />}
-      </div>
-    </div>
-  );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+init();
 </script>
 </body>
 </html>
