@@ -693,6 +693,7 @@
     <nav class="nav-links" aria-label="Main navigation">
       <a href="#how">How it works</a>
       <a href="#browse">Browse</a>
+      <a href="story.html">Our story</a>
       <a href="for-florists.html">For florists</a>
       <a href="customer.html?login=1" style="color: var(--yellow);" id="nav-signin">Sign in</a>
       <a href="florist.html" style="color: var(--muted);">Florist login</a>
@@ -918,7 +919,7 @@
       <input id="s-shop" type="text" placeholder="Shop name" style="width:100%;padding:13px 14px;border:2px solid var(--green);background:#fffdf7;font-size:14px;font-weight:700;font-family:inherit;outline:none;margin-bottom:12px;" />
       <input id="s-area" type="text" placeholder="Area or postcode (e.g. Hackney, E8)" style="width:100%;padding:13px 14px;border:2px solid var(--green);background:#fffdf7;font-size:14px;font-weight:700;font-family:inherit;outline:none;margin-bottom:12px;" />
       <input id="s-by" type="text" placeholder="Your name or email (optional)" style="width:100%;padding:13px 14px;border:2px solid var(--green);background:#fffdf7;font-size:14px;font-weight:700;font-family:inherit;outline:none;margin-bottom:20px;" />
-      <button onclick="submitSuggestion()" style="width:100%;padding:14px;background:var(--yellow);color:var(--green);border:2px solid var(--green);font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:4px 4px 0 var(--green);">Send suggestion →</button>
+      <button onclick="submitSuggestion()" style="width:100%;padding:14px;background:var(--yellow);color:var(--green);border:2px solid var(--green);font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:4px 4px 0 var(--green);">Send suggestion &rarr;</button>
     </div>
   </div>
 </div>
@@ -930,6 +931,7 @@
     <a href="#how">How it works</a>
     <a href="#browse">Browse florists</a>
     <a href="#florists">For florists</a>
+    <a href="story.html">Our story</a>
     <a href="mailto:hello@latebloomers.london">Contact</a>
   </nav>
   <p>&copy; 2026 LateBloomers. Made in London, bouquet in hand.</p>
@@ -983,7 +985,7 @@
         card.innerHTML = `
           <div class="florist-thumb ${f.photo_url ? '' : style}" style="${f.photo_url ? 'padding:0;overflow:hidden;' : ''}">
             ${thumb}
-            <button class="fav-btn" id="fav-${f.id}" onclick="toggleFavourite('${f.id}', '${f.shop_name}')" title="Save to My Garden">♡</button>
+            <button class="fav-btn" id="fav-${f.id}" onclick="toggleFavourite('${f.id}', '${f.shop_name}')" title="Save to My Garden">&#9825;</button>
           </div>
           <div class="florist-body">
             <div class="florist-name">${f.shop_name || f.name}</div>
