@@ -198,6 +198,8 @@
               <input class="input" id="shop-postcode" placeholder="E8" />
             </div>
           </div>
+          <label class="label">Phone number (optional)</label>
+          <input class="input" id="shop-phone" type="tel" placeholder="e.g. 07700 900000" />
           <label class="label">About your shop (optional)</label>
           <textarea class="input" id="shop-bio" placeholder="Tell customers a bit about your shop..."></textarea>
           <button class="btn btn-green" id="save-shop-btn">Save changes</button>
@@ -238,8 +240,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let currentSession = null;
 let currentProfile = null;
 
-// ── SUPABASE HELPERS ──
-
 async function sbFetch(path, options = {}) {
   const headers = {
     'apikey': SUPABASE_KEY,
@@ -254,12 +254,10 @@ async function sbFetch(path, options = {}) {
 }
 
 async function getSession() {
-  // Try reading from localStorage (Supabase stores session there)
   const raw = localStorage.getItem('sb-azelftspngjhmqrjtxby-auth-token');
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    // Check if token is still valid
     if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) return null;
     return parsed;
   } catch { return null; }
@@ -273,7 +271,6 @@ async function signIn(email, password) {
   });
   const data = await res.json();
   if (!res.ok) return { error: data.error_description || 'Wrong email or password.' };
-  // Save session
   localStorage.setItem('sb-azelftspngjhmqrjtxby-auth-token', JSON.stringify(data));
   return { session: data };
 }
@@ -297,14 +294,12 @@ async function updatePassword(newPassword) {
   return res.ok;
 }
 
-// ── PROFILE ──
-
 async function loadProfile(email) {
   const { data } = await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(email) + '&limit=1');
   if (data && data.length > 0) {
     currentProfile = data[0];
   } else {
-    currentProfile = { email, shop_name: '', area: '', postcode: '', bio: '', photo_url: '' };
+    currentProfile = { email, shop_name: '', area: '', postcode: '', bio: '', photo_url: '', phone: '' };
   }
   document.getElementById('sidebar-shop-name').textContent = currentProfile.shop_name || email;
   populateShopForm();
@@ -315,6 +310,7 @@ function populateShopForm() {
   document.getElementById('shop-name').value     = currentProfile.shop_name || '';
   document.getElementById('shop-area').value     = currentProfile.area || '';
   document.getElementById('shop-postcode').value = currentProfile.postcode || '';
+  document.getElementById('shop-phone').value    = currentProfile.phone || '';
   document.getElementById('shop-bio').value      = currentProfile.bio || '';
   if (currentProfile.photo_url) {
     document.getElementById('photo-preview').src = currentProfile.photo_url;
@@ -322,8 +318,6 @@ function populateShopForm() {
     document.getElementById('photo-placeholder').style.display = 'none';
   }
 }
-
-// ── SHOW/HIDE SCREENS ──
 
 function showDashboard() {
   document.getElementById('login-screen').style.display = 'none';
@@ -336,8 +330,6 @@ function showLogin() {
   document.getElementById('dashboard').style.display = 'none';
 }
 
-// ── TABS ──
-
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     const tab = item.dataset.tab;
@@ -349,8 +341,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if (tab === 'orders') loadOrders();
   });
 });
-
-// ── LOGIN ──
 
 document.getElementById('login-btn').addEventListener('click', async () => {
   const email    = document.getElementById('login-email').value.trim();
@@ -381,14 +371,10 @@ document.getElementById('login-password').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('login-btn').click();
 });
 
-// ── LOGOUT ──
-
 document.getElementById('logout-btn').addEventListener('click', async () => {
   await signOut();
   showLogin();
 });
-
-// ── LISTINGS ──
 
 async function loadListings() {
   const el = document.getElementById('listings-list');
@@ -438,7 +424,6 @@ async function deleteListing(id) {
   loadListings();
 }
 
-// Add listing form
 document.getElementById('add-listing-btn').addEventListener('click', () => {
   document.getElementById('new-listing-form').style.display = 'block';
   document.getElementById('add-listing-btn').style.display = 'none';
@@ -474,7 +459,7 @@ document.getElementById('save-listing-btn').addEventListener('click', async () =
   btn.textContent = 'Saving...';
   btn.disabled = true;
 
-  const { ok, data } = await sbFetch('/rest/v1/listings', {
+  const { ok } = await sbFetch('/rest/v1/listings', {
     method: 'POST',
     headers: { 'Prefer': 'return=minimal' },
     body: JSON.stringify({
@@ -517,8 +502,6 @@ function clearListingForm() {
   if (firstRadio) firstRadio.checked = true;
 }
 
-// ── ORDERS ──
-
 async function loadOrders() {
   const el = document.getElementById('orders-list');
   el.innerHTML = '<div class="empty">Loading...</div>';
@@ -536,8 +519,6 @@ async function loadOrders() {
   `).join('');
 }
 
-// ── SHOP ──
-
 document.getElementById('photo-uploader').addEventListener('click', () => {
   document.getElementById('photo-input').click();
 });
@@ -549,10 +530,8 @@ document.getElementById('photo-input').addEventListener('change', async (e) => {
   const placeholder = document.getElementById('photo-placeholder');
   placeholder.innerHTML = '<div style="font-size:13px; color:#5A5A5A; font-weight:600;">Uploading...</div>';
 
-  // Read file as base64
   const reader = new FileReader();
   reader.onload = async (ev) => {
-    const base64 = ev.target.result.split(',')[1];
     const ext = file.name.split('.').pop();
     const userId = currentSession?.user?.id || 'unknown';
     const path = `shop-photos/${userId}-${Date.now()}.${ext}`;
@@ -576,7 +555,6 @@ document.getElementById('photo-input').addEventListener('change', async (e) => {
 
     const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/florist-assets/${path}`;
 
-    // Save to florists table
     await sbFetch('/rest/v1/florists?email=eq.' + encodeURIComponent(currentSession.user.email), {
       method: 'PATCH',
       headers: { 'Prefer': 'return=minimal' },
@@ -601,6 +579,7 @@ document.getElementById('save-shop-btn').addEventListener('click', async () => {
     shop_name: document.getElementById('shop-name').value.trim(),
     area:      document.getElementById('shop-area').value.trim(),
     postcode:  document.getElementById('shop-postcode').value.trim(),
+    phone:     document.getElementById('shop-phone').value.trim() || null,
     bio:       document.getElementById('shop-bio').value.trim(),
   };
 
@@ -619,7 +598,6 @@ document.getElementById('save-shop-btn').addEventListener('click', async () => {
   setTimeout(() => { okEl.style.display = 'none'; }, 2000);
 });
 
-// Password
 document.getElementById('show-pw-btn').addEventListener('click', () => {
   document.getElementById('pw-form').style.display = 'block';
   document.getElementById('show-pw-btn').style.display = 'none';
@@ -656,8 +634,6 @@ document.getElementById('save-pw-btn').addEventListener('click', async () => {
     okEl.style.display = 'none';
   }, 2000);
 });
-
-// ── INIT ──
 
 async function init() {
   const session = await getSession();
