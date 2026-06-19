@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Late Bloomers | For florists</title>
+  <style>
+    :root {
+      --cream:   #fbf6ea;
+      --cream-2: #f3eadb;
+      --green:   #0f4d1e;
+      --green-2: #0a3414;
+      --yellow:  #ffd21f;
+      --yellow-2:#ffe977;
+      --muted:   #55705a;
+      --shadow:  8px 8px 0 rgba(15,77,30,.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--green);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255,210,31,.18) 0 7%, transparent 8%),
+        radial-gradient(circle at 82% 20%, rgba(15,77,30,.08) 0 8%, transparent 9%),
+        linear-gradient(135deg, rgba(0,0,0,.025) 25%, transparent 25%) 0 0/18px 18px,
+        var(--cream);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .22;
+      background-image: radial-gradient(#111 0.7px, transparent 0.7px);
+      background-size: 14px 14px;
+      mix-blend-mode: multiply;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* NAV */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(251,246,234,.92);
+      border-bottom: 2px solid rgba(15,77,30,.18);
+      backdrop-filter: blur(8px);
+    }
+    .nav {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 900; font-size: 21px; letter-spacing: -.04em; }
+    .nav-logo-img { height: 48px; width: auto; display: block; }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-weight: 800; font-size: 15px; }
+    .nav-links a { position: relative; }
+    .nav-links a:hover::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -6px;
+      height: 5px;
+      background: var(--yellow);
+      z-index: -1;
+      transform: rotate(-1deg);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--green);
+      background: var(--green);
+      color: var(--cream);
+      min-height: 48px;
+      padding: 13px 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      font-size: 15px;
+      border-radius: 999px;
+      box-shadow: 4px 4px 0 var(--yellow);
+      transition: transform .15s, box-shadow .15s;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--yellow); }
+    .btn.yellow { background: var(--yellow); color: var(--green); border-color: var(--green); box-shadow: 4px 4px 0 var(--green); }
+    .btn.yellow:hover { box-shadow: 2px 2px 0 var(--green); }
+    .btn.secondary { background: transparent; color: var(--green); box-shadow: 4px 4px 0 rgba(15,77,30,.16); }
+    .btn.green { background: var(--green); color: var(--cream); }
+
+    /* HERO */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 80px 22px 60px;
+      text-align: center;
+    }
+    .kicker {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(52px, 9vw, 110px);
+      line-height: .82;
+      letter-spacing: -.08em;
+      font-weight: 1000;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 28px;
+    }
+    .hero-copy {
+      font-size: 20px;
+      line-height: 1.5;
+      font-weight: 700;
+      color: var(--green);
+      max-width: 620px;
+      margin: 0 auto 36px;
+    }
+
+    /* REASONS */
+    .reasons {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 22px 80px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .reason {
+      background: #fffdf7;
+      border: 2px solid var(--green);
+      padding: 28px 26px;
+      box-shadow: 5px 5px 0 rgba(15,77,30,.18);
+      transform: rotate(var(--r));
+    }
+    .reason:nth-child(1) { --r: -1deg; }
+    .reason:nth-child(2) { --r: .8deg; }
+    .reason:nth-child(3) { --r: -1.2deg; }
+    .reason:nth-child(4) { --r: 1deg; }
+    .reason:nth-child(5) { --r: -.6deg; }
+    .reason:nth-child(6) { --r: 1.4deg; }
+    .reason-icon { font-size: 32px; margin-bottom: 14px; }
+    .reason h3 { font-size: 20px; font-weight: 900; letter-spacing: -.03em; color: var(--green); margin-bottom: 10px; }
+    .reason p { font-size: 15px; line-height: 1.55; font-weight: 700; color: #19632b; }
+
+    /* HOW IT WORKS */
+    .how {
+      background: var(--green);
+      color: var(--cream);
+    }
+    .how-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 80px 22px;
+    }
+    .how h2 {
+      font-size: clamp(34px, 5vw, 60px);
+      font-weight: 1000;
+      letter-spacing: -.06em;
+      line-height: .9;
+      color: var(--yellow);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .how .kicker { color: rgba(255,255,255,.5); margin-bottom: 12px; }
+    .how .lead { font-size: 19px; font-weight: 700; color: #d6e7d1; max-width: 680px; margin-bottom: 40px; line-height: 1.5; }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .step {
+      background: var(--cream);
+      border: 2px solid var(--yellow);
+      padding: 26px 22px;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.2);
+      transform: rotate(var(--r));
+    }
+    .step:nth-child(1) { --r: -1.2deg; }
+    .step:nth-child(2) { --r: .9deg; }
+    .step:nth-child(3) { --r: -.7deg; }
+    .step:nth-child(4) { --r: 1.3deg; }
+    .number {
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--yellow);
+      border: 2px solid var(--green);
+      font-weight: 1000;
+      font-size: 17px;
+      margin-bottom: 22px;
+      color: var(--green);
+    }
+    .step h3 { font-size: 18px; font-weight: 900; letter-spacing: -.03em; color: var(--green); margin-bottom: 8px; }
+    .step p { font-size: 14px; line-height: 1.55; font-weight: 700; color: #19632b; }
+
+    /* CTA */
+    .cta-section {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 80px 22px;
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-size: clamp(38px, 6vw, 72px);
+      font-weight: 1000;
+      letter-spacing: -.07em;
+      line-height: .88;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+    .cta-section p {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 36px;
+      line-height: 1.5;
+    }
+    .cta-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; align-items: center; }
+
+    .contact-card {
+      background: var(--yellow);
+      border: 3px solid var(--green);
+      box-shadow: var(--shadow);
+      padding: 36px 40px;
+      max-width: 500px;
+      margin: 0 auto;
+      transform: rotate(-.5deg);
+    }
+    .contact-card p {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green-2);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--green-2);
+      color: #d8ead4;
+      text-align: center;
+      padding: 44px 22px;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .footer-logo-img { height: 56px; width: auto; display: block; margin: 0 auto 12px; filter: brightness(0) invert(1); }
+    footer nav { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 16px 0; color: #fff; }
+    footer nav a:hover { color: var(--yellow); }
+
+    @media (max-width: 900px) {
+      .reasons { grid-template-columns: 1fr 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 580px) {
+      .reasons { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .nav { padding: 14px; }
+      .nav .btn { display: none; }
+      .contact-card { padding: 28px 24px; }
+      .cta-row .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav">
+    <a class="brand" href="index.html" aria-label="Late Bloomers home">
+      <img src="https://latebloomersbeta.github.io/latebloomers/logo.png" alt="Late Bloomers" class="nav-logo-img" />
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#browse">Browse</a>
+      <a href="index.html#waitlist">Join waitlist</a>
+      <a href="florist.html" style="color: var(--muted);">Florist login</a>
+    </nav>
+    <a class="btn" href="#get-in-touch">Get in touch</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="kicker">For independent florists</div>
+    <h1>Stop binning good flowers.</h1>
+    <p class="hero-copy">Late Bloomers is a curated marketplace for independent London florists. List your end-of-day stems, reach new local customers, and turn waste into revenue.</p>
+    <div class="cta-row">
+      <a class="btn yellow" href="#get-in-touch">Get your shop listed</a>
+      <a class="btn secondary" href="index.html">See how it works</a>
+    </div>
+  </section>
+
+  <!-- REASONS -->
+  <section>
+    <div style="max-width:1180px; margin:0 auto; padding: 0 22px 20px;">
+      <div class="kicker" style="text-align:center; margin-bottom:32px;">Why it works for florists</div>
+    </div>
+    <div class="reasons">
+      <div class="reason">
+        <div class="reason-icon">💷</div>
+        <h3>Extra revenue, zero effort</h3>
+        <p>Flowers you would have binned at the end of the day now earn you money. List in under a minute, collect payment automatically.</p>
+      </div>
+      <div class="reason">
+        <div class="reason-icon">🌿</div>
+        <h3>Less waste, better conscience</h3>
+        <p>Every bunch you rescue is one less trip to the bin. Good for the planet, good for your brand, good for the soul.</p>
+      </div>
+      <div class="reason">
+        <div class="reason-icon">🗺️</div>
+        <h3>New local customers find you</h3>
+        <p>Late Bloomers brings people to your door who never knew you existed. Many come back as full-price regulars.</p>
+      </div>
+      <div class="reason">
+        <div class="reason-icon">✅</div>
+        <h3>Free to join</h3>
+        <p>No upfront cost, no subscription. We take a small cut only when you make a sale. If you do not sell, you pay nothing.</p>
+      </div>
+      <div class="reason">
+        <div class="reason-icon">🏪</div>
+        <h3>You stay in control</h3>
+        <p>You set your own prices and availability. List when you want, hide when you do not. No pressure, no commitments.</p>
+      </div>
+      <div class="reason">
+        <div class="reason-icon">🌸</div>
+        <h3>A curated community</h3>
+        <p>We only work with independent florists. No supermarkets, no chains. Your shop sits alongside people who care about flowers as much as you do.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="how-inner">
+      <div class="kicker">How it works</div>
+      <h2>Simple as that.</h2>
+      <p class="lead">No complicated setup. You are listing and selling within minutes of joining.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="number">1</div>
+          <h3>Get in touch</h3>
+          <p>Drop Clem a message on WhatsApp or email. She will get back to you the same day.</p>
+        </div>
+        <div class="step">
+          <div class="number">2</div>
+          <h3>Get listed</h3>
+          <p>We set up your shop profile together. Takes about 10 minutes. Your shop goes live on the platform.</p>
+        </div>
+        <div class="step">
+          <div class="number">3</div>
+          <h3>List your stems</h3>
+          <p>At the end of the day, pop into your dashboard and list whatever you have left. Set a price and a collect-by time.</p>
+        </div>
+        <div class="step">
+          <div class="number">4</div>
+          <h3>Get paid</h3>
+          <p>Customers reserve and pay in the app. You hand over the flowers, we transfer your earnings every week.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GET IN TOUCH -->
+  <section class="cta-section" id="get-in-touch">
+    <div class="kicker">Ready to join?</div>
+    <h2>Let's talk flowers.</h2>
+    <p>Late Bloomers is growing shop by shop, neighbourhood by neighbourhood. If you are an independent London florist, we would love to have you.</p>
+    <div class="contact-card">
+      <p>Reach out directly to Clem, founder of Late Bloomers. She handles all florist onboarding personally and will walk you through everything.</p>
+      <div class="cta-row">
+        <a class="btn green" href="https://wa.me/447759407709?text=Hi%20Clem!%20I%27m%20interested%20in%20listing%20my%20shop%20on%20Late%20Bloomers." target="_blank" rel="noopener">💬 WhatsApp Clem</a>
+        <a class="btn secondary" href="mailto:clem@latebloomers.london?subject=I%27d%20love%20to%20list%20my%20shop%20on%20Late%20Bloomers">✉️ Send an email</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <img src="https://latebloomersbeta.github.io/latebloomers/logo.png" alt="Late Bloomers" class="footer-logo-img" />
+  <p>London's flower rescue app.</p>
+  <nav>
+    <a href="index.html#how">How it works</a>
+    <a href="index.html#browse">Browse florists</a>
+    <a href="index.html#waitlist">Join waitlist</a>
+    <a href="mailto:clem@latebloomers.london">Contact</a>
+  </nav>
+  <p>&copy; 2026 Late Bloomers. Made in London, bouquet in hand.</p>
+</footer>
+
+</body>
+</html>
