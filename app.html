@@ -31,7 +31,6 @@
       overflow-x: hidden;
     }
 
-    /* grain overlay */
     body::before {
       content: "";
       position: fixed;
@@ -45,7 +44,6 @@
 
     a { color: inherit; text-decoration: none; }
 
-    /* NAV */
     .site-header {
       position: sticky;
       top: 0;
@@ -128,7 +126,6 @@
     .btn.yellow { background: var(--yellow); color: var(--green); border-color: var(--green); box-shadow: 4px 4px 0 var(--green); }
     .btn.yellow:hover { box-shadow: 2px 2px 0 var(--green); }
 
-    /* HERO */
     .hero {
       max-width: 1180px;
       margin: 0 auto;
@@ -176,7 +173,6 @@
 
     .cta-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 
-    /* hero visual card */
     .hero-card {
       position: relative;
       background: var(--cream-2);
@@ -196,7 +192,6 @@
       overflow: hidden;
     }
 
-    /* css flower illustration */
     .bouquet { position: relative; width: 180px; height: 260px; }
 
     .stem {
@@ -266,7 +261,6 @@
       color: var(--green-2);
     }
 
-    /* SECTION SHARED */
     .section-inner {
       max-width: 1180px;
       margin: 0 auto;
@@ -300,7 +294,6 @@
       margin: 0 0 36px;
     }
 
-    /* HOW IT WORKS */
     .steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
     .step {
       background: #fffdf7;
@@ -331,7 +324,6 @@
     .step h3 { margin: 0 0 12px; font-size: 22px; letter-spacing: -.03em; color: var(--green); }
     .step p { margin: 0; font-size: 16px; line-height: 1.5; font-weight: 700; color: #19632b; }
 
-    /* AUDIENCE */
     .audiences { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 34px; }
     .audience-card {
       border: 3px solid var(--green);
@@ -359,7 +351,6 @@
     .audience-card li::marker { color: var(--yellow); }
     .audience-card.yellow li::marker { color: var(--green); }
 
-    /* SAMPLE DROPS */
     .drops { background: var(--green); color: var(--cream); }
     .drops h2, .drops .kicker { color: var(--yellow); }
     .drops .lead { color: #d6e7d1; }
@@ -420,7 +411,6 @@
     }
     .drops .cta-row { margin-top: 40px; }
 
-    /* BROWSE / FLORISTS */
     #browse { background: var(--cream-2); }
     .browse-bar {
       display: flex;
@@ -569,7 +559,6 @@
     }
     .florist-cta:hover { opacity: .8; }
 
-    /* empty card */
     .florist-card.empty {
       border: 2px dashed rgba(15,77,30,.3);
       box-shadow: none;
@@ -587,7 +576,6 @@
     .florist-card.empty h3 { font-size: 18px; font-weight: 900; color: var(--green); letter-spacing: -.03em; text-transform: uppercase; }
     .florist-card.empty p { font-size: 14px; font-weight: 700; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
 
-    /* WAITLIST */
     .waitlist { background: var(--yellow); }
     .waitlist h2 { color: var(--green); }
     .waitlist .lead { color: var(--green-2); }
@@ -654,7 +642,6 @@
     }
     .success-msg.visible { display: block; }
 
-    /* FOOTER */
     footer {
       background: var(--green-2);
       color: #d8ead4;
@@ -668,7 +655,6 @@
     footer nav { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 20px 0; color: #fff; }
     footer nav a:hover { color: var(--yellow); }
 
-    /* RESPONSIVE */
     @media (max-width: 900px) {
       .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 52px; }
       .steps, .drop-grid { grid-template-columns: 1fr 1fr; }
@@ -908,6 +894,7 @@
             <input type="text" id="f-name" placeholder="Your name" required />
             <input type="email" id="f-email" placeholder="Email address" required />
             <input type="text" id="f-shop" class="full" placeholder="Shop name" style="display:none;" />
+            <input type="tel" id="f-phone" class="full" placeholder="Phone number (optional)" style="display:none;" />
             <input type="text" id="f-postcode" class="full" placeholder="Your postcode, e.g. N1, E8, SW3" required />
           </div>
           <button class="btn yellow" onclick="handleSubmit()">Join the waitlist</button>
@@ -945,7 +932,7 @@
     <a href="#browse">Browse florists</a>
     <a href="#florists">For florists</a>
     <a href="#waitlist">Join waitlist</a>
-    <a href="mailto:hello@latebloomers.co.uk">Contact</a>
+    <a href="mailto:hello@latebloomers.london">Contact</a>
   </nav>
   <p>&copy; 2026 LateBloomers. Made in London, bouquet in hand.</p>
 </footer>
@@ -1061,6 +1048,7 @@
     const name     = document.getElementById('f-name').value.trim();
     const email    = document.getElementById('f-email').value.trim();
     const shop     = document.getElementById('f-shop').value.trim();
+    const phone    = document.getElementById('f-phone').value.trim();
     const postcode = document.getElementById('f-postcode').value.trim();
     const role     = document.querySelector('input[name="role"]:checked').value;
 
@@ -1072,7 +1060,7 @@
     const isFlorist = role === 'florist';
     const table = isFlorist ? 'florists' : 'customers';
     const data  = isFlorist
-      ? { name, email, postcode, shop_name: shop }
+      ? { name, email, postcode, shop_name: shop, phone: phone || null }
       : { name, email, postcode };
 
     const btn = document.querySelector('.form-card .btn');
@@ -1113,6 +1101,7 @@
   function toggleShop() {
     const isFlorist = document.querySelector('input[name="role"]:checked').value === 'florist';
     document.getElementById('f-shop').style.display = isFlorist ? 'block' : 'none';
+    document.getElementById('f-phone').style.display = isFlorist ? 'block' : 'none';
   }
 
   function showSuggestForm() {
