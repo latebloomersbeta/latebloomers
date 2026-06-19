@@ -156,9 +156,9 @@
     h1 {
       margin: 0;
       color: var(--green);
-      font-size: clamp(58px, 9vw, 120px);
-      line-height: .82;
-      letter-spacing: -.08em;
+      font-size: clamp(42px, 9vw, 120px);
+      line-height: .9;
+      letter-spacing: -.04em;
       font-weight: 1000;
       text-transform: uppercase;
     }
@@ -277,10 +277,10 @@
     }
 
     h2 {
-      font-size: clamp(34px, 5vw, 60px);
+      font-size: clamp(28px, 5vw, 60px);
       font-weight: 1000;
-      letter-spacing: -.06em;
-      line-height: .9;
+      letter-spacing: -.03em;
+      line-height: .95;
       color: var(--green);
       margin-bottom: 24px;
       text-transform: uppercase;
@@ -660,7 +660,6 @@
       .steps, .drop-grid { grid-template-columns: 1fr 1fr; }
       .audiences { grid-template-columns: 1fr; }
       .nav-links { display: none; }
-      h1 { font-size: 72px; }
     }
     @media (max-width: 580px) {
       .nav { padding: 14px; }
@@ -669,7 +668,8 @@
       .nav .btn { display: none; }
       .hero { padding: 42px 16px; }
       .section-inner { padding: 56px 16px; }
-      h1 { font-size: 56px; }
+      h1 { font-size: 38px; letter-spacing: -.02em; }
+      h2 { font-size: 26px; letter-spacing: -.02em; }
       .hero-copy, .lead { font-size: 18px; }
       .steps, .drop-grid, .form-grid { grid-template-columns: 1fr; }
       .price-tag { right: 8px; width: 150px; }
